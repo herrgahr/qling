@@ -1,7 +1,9 @@
-/* Copyright (C) 2006 - 2011 Thomas Gahr <thomas.gahr@physik.uni-muenchen.de>
+/* Copyright (C) 2011 - 2012 Thomas Gahr <thomas.gahr@physik.uni-muenchen.de>
 
-   This file is part of the Trojita Qt IMAP e-mail client,
-   http://trojita.flaska.net/
+   This file is part of qling, a Qt Interface to cling, the llvm-based
+   C++ interpreter.
+
+   cling: http://root.cern.ch/drupal/content/cling
 
    This program is free software; you can redistribute it and/or
    modify it under the terms of the GNU General Public

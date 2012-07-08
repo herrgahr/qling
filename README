@@ -1,0 +1,41 @@
+Qling, the Qt interface for cling
+=================================
+
+This is a simple Qt interface for cling, the llvm-based C++ interpreter
+
+This is at a very early stage and definitely needs some love.
+At the moment you need to hack some stuff into source files to get it to compile and run correctly, see Compiling...
+
+
+Compiling
+==========
+
+First you need to install llvm, clang and cling from SVN. Follow the instructions at
+http://root.cern.ch/drupal/content/cling-build-instructions
+
+Install it to some folder, either system wide or somewhere in your home (speficy via the --prefix
+option to llvm's configure-script).
+At the moment you need to specify that installation path at a few different places:
+qling.pro
+main.cpp
+
+In both files you find mentions of "/home/thomas/opt/llvm-debug" - replace this with the installation path
+provided to llvm's configure script.
+
+After you've done this:
+
+qmake
+make
+
+and
+
+./qling
+
+to start
+
+This mess will definitely be fixed in the next commit, this is just hastily packed up and uploaded to get the
+sources out there.
+
+
+Have fun!
+
