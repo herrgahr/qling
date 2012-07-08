@@ -91,14 +91,6 @@ HEADERS  += widget.h \
     util.h \
     consoleoutput.h \
     codeinput.h \
-    test0.h \
-    namedparam.h \
-    npwidget.h \
-    nplabel.h \
-    npbutton.h \
-    npgui.h \
-    codewidget.h \
-    foo.h \
-    foo_iostream.h
+    codewidget.h
 
 
