@@ -23,20 +23,14 @@
 
 #ifndef NO_CONSOLE_REDIRECT
 
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <string>
-#include <sys/time.h>
-
+#include <cassert>
 #include <iostream>
-
-#include "consoleoutput.h"
+#include <string>
 
 #include <QTimerEvent>
 #include <QScrollBar>
 
-#include <cassert>
+#include "consoleoutput.h"
 
 ConsoleOutput::ConsoleOutput(bool enabled)
     :QTextEdit()
@@ -64,8 +58,6 @@ void ConsoleOutput::enable(bool enable)
         pipe(m_pipe);
         m_oldStdOut=dup(fileno(stdout));
         m_oldStdErr=dup(fileno(stderr));
-    //    dup2(STDOUT_FILENO,m_oldStdOut);
-    //    dup2(STDERR_FILENO,m_oldStdErr);
         if (m_oldStdOut == -1 || m_oldStdErr == -1)
             return;
 

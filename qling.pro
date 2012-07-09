@@ -26,14 +26,12 @@ qt-hack/qatomic_sun.o\
 SOURCES +=\
 main.cpp\
 widget.cpp \
-util.cpp \
 consoleoutput.cpp \
 codeinput.cpp \
 codewidget.cpp
 
 HEADERS  +=\
 widget.h \
-util.h \
 consoleoutput.h \
 codeinput.h \
 codewidget.h

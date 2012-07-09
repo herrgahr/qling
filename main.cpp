@@ -21,70 +21,40 @@
    Boston, MA 02110-1301, USA.
 */
 
-#include <QtGui/QApplication>
-#include "widget.h"
-//------------------------------------------------------------------------------
-// CLING - the C++ LLVM-based InterpreterG :)
-// version: $Id: cling.cpp 40347 2011-07-23 21:12:28Z axel $
-// author:  Lukasz Janyst <ljanyst@cern.ch>
-//------------------------------------------------------------------------------
-
-#include <iostream>
-#include <vector>
-#include <string>
 #include <sstream>
 
+#include <QtGui/QApplication>
+
+#include "llvm/Support/ManagedStatic.h"
+#include "clang/Basic/FileManager.h"
 #include "clang/Basic/LangOptions.h"
+#include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/HeaderSearchOptions.h"
-#include "clang/Basic/SourceManager.h"
-#include "clang/Basic/FileManager.h"
-
-#include "llvm/Support/Signals.h"
-#include "llvm/Support/PrettyStackTrace.h"
-#include "llvm/Support/ManagedStatic.h"
 
 #include "cling/Interpreter/Interpreter.h"
-#include "cling/UserInterface/UserInterface.h"
 
-//need to include this to force linking libLLVMMCJIT
-//#include "llvm/ExecutionEngine/MCJIT.h"
+#include "widget.h"
 
-#include "util.h"
+/* Short outline of how to include cling into an application
+  *
+  * Create and configure and instance of cling::Interpreter
+  *   (happens here in main.cpp)
+  *
+  * Create an instance of cling::MetaProcessor.
+  *   (happens in codewidget.cpp)
+  *
+  * Feed code to the interpreter via MetaProcessor::process
+  *   (happens in codewidget.cpp, too)
+  *
+  * That's it :)
+  *
+  * Note: you can directly feed code to the interpreter without going through
+  * the MetaProcessor, but the MetaProcessor provides some comfort such as
+  * "dot" commands. I.e. ".I", ".x", ".L" and all the stuff cling provides.
+  *
+  */
 
-#include <string>
-
-#include "llvm/Pass.h"
-#include "llvm/Function.h"
-#include "llvm/Support/raw_ostream.h"
-
-using namespace llvm;
-
-extern "C"{
-
-void foo(){
-    std::cout<<"foo called\n";
-}
-
-void bar(){
-    std::cout<<"bar called\n";
-}
-
-
-int q_atomic_test_and_set_int(volatile int *ptr, int expected, int newval);
-int q_atomic_test_and_set_ptr(volatile void *ptr, void *expected, void *newval);
-int q_atomic_increment(volatile int *ptr);
-int q_atomic_decrement(volatile int *ptr);
-int q_atomic_set_int(volatile int *ptr, int newval);
-void *q_atomic_set_ptr(volatile void *ptr, void *newval);
-int q_atomic_fetch_and_add_int(volatile int *ptr, int value);
-void *q_atomic_fetch_and_add_ptr(volatile void *ptr, qptrdiff value);
-
-}//extern "C"
-
-//------------------------------------------------------------------------------
-// Let the show begin
-//------------------------------------------------------------------------------
 int main( int argc, char **argv )
 {
     QApplication a(argc, argv);
@@ -104,8 +74,6 @@ int main( int argc, char **argv )
         return 0;
     }
 
-    clang::CompilerInstance* CI = interpreter.getCI();
-
     interpreter.AddIncludePath(".");
     interpreter.AddIncludePath("./qt-hack/");
     interpreter.AddIncludePath("/usr/include/qt4");
@@ -120,17 +88,11 @@ int main( int argc, char **argv )
     //interpreter.processLine("#define CLING_HACK");
     //interpreter.processLine("#include \"eigen3-patched/Eigen/Dense\"");
 
-    for (size_t I = 0, N = interpreter.getOptions().LibsToLoad.size();
-         I < N; ++I) {
-        interpreter.loadFile(interpreter.getOptions().LibsToLoad[I]);
-    }
-
-
     MainWidget w(interpreter);
     w.show();
 
     //make MainWidget available to the interpreter so the user can invoke
-    //gui.foo(bar);
+    //qling.foo(bar);
     interpreter.process("#include \"widget.h\"");
     std::stringstream initWidget;
     initWidget<<"MainWidget& qling=*(static_cast<MainWidget*>((void*)"<<(long)&w<<"));";

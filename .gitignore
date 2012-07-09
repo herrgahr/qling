@@ -7,3 +7,4 @@ Makefile*
 qling
 core
 core.*
+tst_*

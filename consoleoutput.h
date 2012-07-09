@@ -39,6 +39,14 @@ struct ConsoleOutput:public QLabel{
 };
 #else
 
+/** Console-widget
+  *
+  * Redirects stdout & stderr via pipe-magic. Only tested on linux.
+  * I have no idea about working with pipes from C/C++, just found usable code
+  * in some internet forum and used that. It works, but if anybody knows how to
+  * do this more correct/elegant or spots an error, feel free to improve this
+  * code!
+  */
 class ConsoleOutput : public QTextEdit
 {
     Q_OBJECT

@@ -24,15 +24,7 @@
 #ifndef WIDGET_H
 #define WIDGET_H
 
-//#include <unistd.h>
-//#include <fcntl.h>
-//#include <stdio.h>
-//#include <string>
-//#include <sys/time.h>
-
 #include <QtGui/QMainWindow>
-
-//#include "bridge.h"
 
 class ConsoleOutput;
 class CodeWidget;
@@ -42,6 +34,8 @@ class QDockWidget;
 namespace cling{
     class Interpreter;
 }
+
+
 class MainWidget : public QMainWindow
 {
     Q_OBJECT
@@ -49,8 +43,6 @@ class MainWidget : public QMainWindow
 public:
     MainWidget(cling::Interpreter& interpreter);
     ~MainWidget();
-
-    //void init();
 
 public slots:
     void writeToConsole(const char* txt);
