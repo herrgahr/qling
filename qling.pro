@@ -6,15 +6,18 @@ TEMPLATE = app
 #DEFINES+=NO_CONSOLE_REDIRECT
 
 #TODO smarter way to provide llvm-install-dir
-INCLUDEPATH+=/home/thomas/opt/llvm-debug/include\
-             /home/thomas/opt/llvm-debug/include/clang\
-             /home/thomas/opt/llvm-debug/include/cling
+#INCLUDEPATH+=/home/thomas/opt/llvm-debug/include\
+#             /home/thomas/opt/llvm-debug/include/clang\
+#             /home/thomas/opt/llvm-debug/include/cling
+DEFINES+=LLVM_INSTALL=\\\"$$(LLVM_INSTALL)\\\"
+INCLUDEPATH+=$$(LLVM_INSTALL)/include\
+             $$(LLVM_INSTALL)/include/clang\
+             $$(LLVM_INSTALL)/include/cling
 
-QMAKE_CXXFLAGS+=-D_DEBUG -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS\
--D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -O3 -fomit-frame-pointer\
--fno-exceptions -fno-rtti -fPIC -Woverloaded-virtual -Wcast-qual -fPIC -Wno-unused-parameter -Wno-strict-aliasing
+QMAKE_CXXFLAGS+=-D__STDC_CONSTANT_MACROS\
+-D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 
-LIBS += -L/home/thomas/opt/llvm-debug/lib/
+LIBS += -L$$(LLVM_INSTALL)/lib/
 # rdynamic causes symbols to be exported even though this is not a lib
 LIBS += -lm -ldl -fPIC -rdynamic\
 qt-hack/qatomic_sun.o\
@@ -35,11 +38,11 @@ qt-hack/qatomic_sun.o\
 -lLLVMArchive\
 -lLLVMBitReader\
 -lLLVMJIT\
-#MCJIT
--lLLVMMCJIT\
--lLLVMRuntimeDyld\
--lLLVMObject\
-#/MCJIT
+##MCJIT
+#-lLLVMMCJIT\
+#-lLLVMRuntimeDyld\
+#-lLLVMObject\
+##/MCJIT
 -lLLVMExecutionEngine \
 -lLLVMX86Disassembler\
 -lLLVMX86AsmParser\
@@ -62,17 +65,20 @@ qt-hack/qatomic_sun.o\
 -lLLVMMC\
 -lLLVMSupport
 
-SOURCES += main.cpp\
-        widget.cpp \
-    util.cpp \
-    consoleoutput.cpp \
-    codeinput.cpp \
-    codewidget.cpp
+SOURCES +=\
+main.cpp\
+widget.cpp \
+util.cpp \
+consoleoutput.cpp \
+codeinput.cpp \
+codewidget.cpp
 
-HEADERS  += widget.h \
-    util.h \
-    consoleoutput.h \
-    codeinput.h \
-    codewidget.h
+HEADERS  +=\
+widget.h \
+util.h \
+consoleoutput.h \
+codeinput.h \
+codewidget.h
+
 
 

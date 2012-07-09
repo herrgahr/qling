@@ -47,6 +47,10 @@
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/UserInterface/UserInterface.h"
 
+#ifndef LLVM_INSTALL
+#error You need to define LLVM_INSTALL when calling qmake!!!
+#endif
+
 //need to include this to force linking libLLVMMCJIT
 //#include "llvm/ExecutionEngine/MCJIT.h"
 
@@ -99,7 +103,7 @@ int main( int argc, char **argv )
     //---------------------------------------------------------------------------
     // Set up the interpreter
     //---------------------------------------------------------------------------
-    cling::Interpreter interpreter(argc, argv,"/home/thomas/opt/llvm-debug/");
+    cling::Interpreter interpreter(argc, argv,LLVM_INSTALL);
     if (interpreter.getOptions().Help) {
         return 0;
     }
