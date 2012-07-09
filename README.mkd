@@ -83,6 +83,11 @@ These inline-asm issues likely cause other libraries that you might want to use 
 Recently the "MC framework" has been included in llvm and MC's JIT does support inline assembly. Unfortunately cling needs to be patched to make use of that and I have not yet been successful in making this work correctly - it segfaults atm which seems to be some JIT-memory-manager issue that I have yet to figure out. I have only spent ~1hour on this and then given up due to lack of time.
 
 
+Credits
+=======
+
+The core part of this program's functionality is provided by cling, which is developed at CERN.
+A big "thank you" goes out to Axel Naumann and Vassil Vassilev who've been providing me with help, tipps and support.
 
 
 Have fun!
