@@ -2,16 +2,20 @@ QT       += core gui
 
 TARGET = qling
 TEMPLATE = app
+LLVM_INSTALL=$$(LLVM_INSTALL)
+isEmpty(LLVM_INSTALL):error(The environment variable LLVM_INSTALL has to be defined!)
+!exists($${LLVM_INSTALL}/bin/llvm-config):error($${LLVM_INSTALL}/bin/llvm-config not found!)
+
 
 #DEFINES+=NO_CONSOLE_REDIRECT
 
-DEFINES+=LLVM_INSTALL=\\\"$$(LLVM_INSTALL)\\\"
+DEFINES+=LLVM_INSTALL=\\\"$${LLVM_INSTALL}\\\"
 
-QMAKE_CXXFLAGS+=$$system($$(LLVM_INSTALL)/bin/llvm-config --cxxflags)\
+QMAKE_CXXFLAGS+=$$system($${LLVM_INSTALL}/bin/llvm-config --cxxflags)\
 -Wno-unused-parameter -Wno-strict-aliasing
 
 
-LIBS+=$$system($$(LLVM_INSTALL)/bin/llvm-config --ldflags)
+LIBS+=$$system($${LLVM_INSTALL}/bin/llvm-config --ldflags)
 
 # rdynamic causes symbols to be exported even though this is not a lib
 LIBS += -lm -ldl -fPIC -rdynamic\
