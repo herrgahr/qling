@@ -137,7 +137,7 @@ int main( int argc, char **argv )
     //gui.foo(bar);
     interpreter.process("#include \"widget.h\"");
     std::stringstream initWidget;
-    initWidget<<"MainWidget& gui=*(static_cast<MainWidget*>((void*)"<<(long)&w<<"));";
+    initWidget<<"MainWidget& qling=*(static_cast<MainWidget*>((void*)"<<(long)&w<<"));";
     std::string str=initWidget.str();
     interpreter.process(str);
 
