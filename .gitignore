@@ -5,3 +5,5 @@ ui_*
 log
 Makefile*
 qling
+core
+core.*
