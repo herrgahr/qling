@@ -4,7 +4,6 @@ Qling, the Qt interface for cling
 This is a simple Qt interface for cling, the llvm-based C++ interpreter
 
 This is at a very early stage and definitely needs some love.
-At the moment you need to hack some stuff into source files to get it to compile and run correctly, see Compiling...
 
 
 Compiling
