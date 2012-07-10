@@ -28,6 +28,7 @@
 
 class ConsoleOutput;
 class CodeWidget;
+class JitEventListener;
 
 class QDockWidget;
 
@@ -57,6 +58,7 @@ private:
     QDockWidget* m_consoleDock;
     CodeWidget* m_codeWidget;
     QDockWidget* m_gdbDock;
+    JitEventListener* m_jitEventListener;
 //    Gdb& m_gdb;
 };
 

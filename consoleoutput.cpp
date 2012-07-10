@@ -36,6 +36,7 @@ ConsoleOutput::ConsoleOutput(bool enabled)
     :QTextEdit()
     ,m_enabled(false)
     ,m_timerId(0)
+    ,m_mode(CompileMode)
 {
     setReadOnly(true);
     setFont(QFont("Monospace"));
@@ -190,9 +191,26 @@ void ConsoleOutput::timerEvent(QTimerEvent *e)
 void ConsoleOutput::write(const QString &str)
 {
     QTextCursor cursor=textCursor();
+    cursor.clearSelection();
     if(!cursor.atEnd())
         cursor.movePosition(QTextCursor::End);
     cursor.insertText(str);
+}
+
+void ConsoleOutput::enterCompileMode()
+{
+    if(m_mode==CompileMode)
+        return;
+    m_mode=CompileMode;
+    write(QString("\n")+QString(80,'c')+QString("\n"));
+}
+
+void ConsoleOutput::enterAppMode()
+{
+    if(m_mode==AppMode)
+        return;
+    m_mode=AppMode;
+    write(QString("\n")+QString(80,'x')+QString("\n"));
 }
 
 #endif //NO_CONSOLE_REDIRECT

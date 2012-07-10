@@ -62,8 +62,11 @@ signals:
 
 public slots:
     void write(const QString& str);
+    void enterCompileMode();
+    void enterAppMode();
 
 private:
+    enum Mode{AppMode,CompileMode};
     bool m_enabled;
     int m_timerId;
     enum PIPES { READ, WRITE };
@@ -73,6 +76,7 @@ private:
     std::string m_captured;
     QTextStream m_fileStream;
     QFile m_file;
+    Mode m_mode;
 };
 
 #endif

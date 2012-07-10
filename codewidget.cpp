@@ -54,6 +54,8 @@ CodeWidget::CodeWidget(cling::Interpreter& interpreter)
     hl->addWidget(m_codeInput);
     connect(enableMultiLine,SIGNAL(toggled(bool)),
             m_codeInput,SLOT(enableMultiLineMode(bool)));
+    connect(enableMultiLine,SIGNAL(released()),
+            m_codeInput,SLOT(setFocus()));
     layout->addLayout(hl);
     m_codeInput->setFocus();
     connect(m_codeInput,SIGNAL(entered(QString)),this,SLOT(processCode(QString)));
@@ -72,6 +74,7 @@ void CodeWidget::processCode(const QString& str)
         cursor.movePosition(QTextCursor::End);
 
     //submit code
+    emit aboutToProcessCode();
     int indent = m_metaProcessor->process(str.toStdString().c_str());
 
     QTextCharFormat format=cursor.charFormat();

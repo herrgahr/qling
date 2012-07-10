@@ -51,6 +51,8 @@ public:
 public slots:
     /** pass str to the interpreter*/
     void processCode(const QString& str);
+signals:
+    void aboutToProcessCode();
 
 private:
     cling::Interpreter& m_interpreter;
