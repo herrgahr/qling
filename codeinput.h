@@ -24,7 +24,7 @@
 #ifndef CODEINPUT_H
 #define CODEINPUT_H
 
-#include <QLineEdit>
+#include <QTextEdit>
 #include <QStringList>
 
 /** LineEdit that keeps a history of stuff entered
@@ -33,7 +33,7 @@
   * QApplication::setApplicationName and QApplication::setOrganizationName
   * to uniquely identify the settings
   */
-class CodeInput : public QLineEdit
+class CodeInput : public QTextEdit
 {
     Q_OBJECT
 public:
@@ -50,19 +50,36 @@ public:
       */
     void setMaxHistorySize(int s);
     int maxHistorySize()const;
+    QString text()const;
+    bool isEmpty()const;
+
+    void fitSizeToText();
+    //void scrollToBottom();
+
+protected:
+    void showEvent(QShowEvent *);
 
 signals:
     void entered(const QString& str);
 
 public slots:
+    void enableMultiLineMode(bool e);
 
 private:
-    //might be public???
+    void submit();
     void addToHistory(const QString& str);
     void moveInHistory(int dir);
     QStringList m_history;
     int m_historyPos;
     int m_maxHistorySize;
+
+    //used in eventFilter to check if text has changed
+    QString m_oldText;
+    //cache to save text that has neither been submitted nor committed to
+    //history
+    QString m_unsubmittedText;
+    int m_yMargin;
+    bool m_multiLineEnabled;
 };
 
 #endif // CODEINPUT_H

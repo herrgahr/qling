@@ -25,15 +25,19 @@
 
 #include <QKeyEvent>
 #include <QSettings>
+#include <QAbstractTextDocumentLayout>
 
 CodeInput::CodeInput(QWidget *parent)
-    :QLineEdit(parent)
+    :QTextEdit(parent)
     ,m_maxHistorySize(50)
+    ,m_multiLineEnabled(false)
 {
     installEventFilter(this);
     QSettings s;
     m_history=s.value("history").toStringList();
     m_historyPos=m_history.size();
+    setFont(QFont("Monospace"));
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 }
 
 CodeInput::~CodeInput()
@@ -48,24 +52,42 @@ CodeInput::~CodeInput()
   */
 bool CodeInput::eventFilter(QObject *, QEvent *e)
 {
-    if(e->type()!=QEvent::KeyRelease && e->type()!=QEvent::KeyRelease)
+    if(e->type()!=QEvent::KeyPress && e->type()!=QEvent::KeyRelease)
         return false;
     QKeyEvent* ke=static_cast<QKeyEvent*>(e);
+    QString currentText=text();
+    if(currentText!=m_oldText){
+        fitSizeToText();
+        m_oldText=currentText;
+    }
     switch(ke->key()){
     case Qt::Key_Up:
-        moveInHistory(-1);
-        return true;
+        if(!m_multiLineEnabled || (ke->modifiers()==Qt::ControlModifier)){
+            if(e->type()==QEvent::KeyRelease)
+                moveInHistory(-1);
+            return true;
+        }
+        return false;
     case Qt::Key_Down:
-        moveInHistory(1);
-        return true;
+        if(!m_multiLineEnabled || (ke->modifiers()==Qt::ControlModifier)){
+            if(e->type()==QEvent::KeyRelease)
+                moveInHistory(1);
+            return true;
+        }
+        return false;
     case Qt::Key_Return:
     case Qt::Key_Enter:
-        if(!text().isEmpty()){
-            addToHistory(text());
-            emit entered(text());
-            clear();
+        if(currentText.isEmpty())
+            return true;
+        if(!m_multiLineEnabled || (ke->modifiers()==Qt::ControlModifier)){
+            if(e->type()==QEvent::KeyRelease)
+                return true;
+            if(currentText.endsWith("\n"))
+                currentText.remove(currentText.length()-1,1);
+            submit();
+            return true;
         }
-        return true;
+        return false;
     default:
         return false;
     }
@@ -80,6 +102,30 @@ void CodeInput::setMaxHistorySize(int s)
 int CodeInput::maxHistorySize() const
 {
     return m_maxHistorySize;
+}
+
+QString CodeInput::text() const
+{
+    return document()->toPlainText();
+}
+
+bool CodeInput::isEmpty() const
+{
+    return document()->isEmpty();
+}
+
+void CodeInput::fitSizeToText()
+{
+    setFixedHeight(document()->documentLayout()->documentSize().toSize().height()+m_yMargin);
+}
+
+void CodeInput::showEvent(QShowEvent *e)
+{
+    QTextEdit::showEvent(e);
+    int wh=viewport()->height();
+    int h=height();
+    m_yMargin=h-wh;
+    fitSizeToText();
 }
 
 void CodeInput::addToHistory(const QString &str)
@@ -109,8 +155,66 @@ void CodeInput::moveInHistory(int dir)
 
     //if we're past m_history's last entry, clear text
     if(m_historyPos==m_history.size()){
-        clear();
+        //clear();
+        setText(m_unsubmittedText);
+        fitSizeToText();
         return;
     }
+    //if there is unsubmitted text in the line-edit, cache it
+    if(m_historyPos==m_history.size()-1 && dir<0)
+        m_unsubmittedText=text();
     setText(m_history[m_historyPos]);
+
+    //I'd expect this to move the cursor to the end of the currently shown
+    //text - yet it doesn't. Y u no work?
+    //textCursor().movePosition(QTextCursor::End);
+
+    m_oldText=m_history[m_historyPos];
+    fitSizeToText();
+}
+
+void CodeInput::submit()
+{
+    if(isEmpty())
+        return;
+    bool collectPreprocessor=false;
+    bool submitChunk=false;
+    QString chunk;
+    QStringList split=text().split('\n');
+    while(!split.isEmpty()){
+        if(split[0][0]=='#'){
+            if(!collectPreprocessor){
+                submitChunk=!chunk.isEmpty();
+                collectPreprocessor=true;
+            }
+        }else{
+            if(collectPreprocessor){
+                submitChunk=true;
+                collectPreprocessor=false;
+            }
+        }
+        if(submitChunk){
+            //addToHistory(chunk);
+            //chunk will have one trailing '\n' that the user did not enter - remove
+            chunk.remove(chunk.length()-1,1);
+            emit entered(chunk);
+            chunk=QString();
+            submitChunk=false;
+        }
+        chunk+=split[0]+'\n';
+        split.pop_front();
+    }
+
+    //chunk will have one trailing '\n' that the user did not enter - remove
+    chunk.remove(chunk.length()-1,1);
+    emit entered(chunk);
+    addToHistory(text());
+    clear();
+    m_unsubmittedText=QString();
+    fitSizeToText();
+}
+
+void CodeInput::enableMultiLineMode(bool e)
+{
+    m_multiLineEnabled=e;
 }

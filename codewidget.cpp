@@ -26,6 +26,7 @@
 #include <QTextEdit>
 #include <QVBoxLayout>
 #include <QScrollBar>
+#include <QCheckBox>
 
 #include "clang/Frontend/CompilerInstance.h"
 #include <cling/MetaProcessor/MetaProcessor.h>
@@ -44,8 +45,16 @@ CodeWidget::CodeWidget(cling::Interpreter& interpreter)
     m_codeOutput->setReadOnly(true);
     m_codeOutput->setFont(QFont("Monospace"));
     layout->addWidget(m_codeOutput);
+
+    QHBoxLayout* hl=new QHBoxLayout;
+    QCheckBox* enableMultiLine=new QCheckBox("multi-line");
+    hl->addWidget(enableMultiLine);
+
     m_codeInput=new CodeInput;
-    layout->addWidget(m_codeInput);
+    hl->addWidget(m_codeInput);
+    connect(enableMultiLine,SIGNAL(toggled(bool)),
+            m_codeInput,SLOT(enableMultiLineMode(bool)));
+    layout->addLayout(hl);
     m_codeInput->setFocus();
     connect(m_codeInput,SIGNAL(entered(QString)),this,SLOT(processCode(QString)));
 }
