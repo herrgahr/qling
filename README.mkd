@@ -3,7 +3,7 @@ Qling, the Qt interface for cling
 
 This is a simple Qt interface for cling, the llvm-based C++ interpreter
 
-This is at a very early stage and definitely needs some love.
+It is at an early stage and definitely needs some love.
 
 
 Compiling
@@ -14,7 +14,7 @@ http://root.cern.ch/drupal/content/cling-build-instructions
 
 Install it to some folder, either system wide or somewhere in your home (speficy via the --prefix option to llvm's configure-script).
 
-First you need to enter the the directory qt-hack and compile qatomic_sun.s (see Notes for explanation):
+Enter qling's subdirectory "qt-hack" and compile qatomic_sun.s (see Notes for explanation):
 
 	$ cd qt-hack
 	$ as qatomic_sun.s -o qatomic_sun.o
@@ -81,7 +81,7 @@ Create a dock-widget in qling's main window
 Multi-line input
 ----------------
 
-In multi-line mode, you can comfortably enter longer chunks of code and submit it in one go. If multi-line mode is active, the key actions to move in the history and submitt code are only triggered when Ctrl is held. so Ctrl+KeyUp and Ctrl+KeyDown move in history, Ctrl+Enter submitts code.
+In multi-line mode, you can comfortably enter longer chunks of code and submit it in one go. If multi-line mode is active, the key actions to move in the history and submit code are only triggered when Ctrl is held. so Ctrl+KeyUp and Ctrl+KeyDown move in history, Ctrl+Enter submits code.
 So you can do stuff like this more naturally:
 
 	#include <QPushButton>
@@ -114,6 +114,9 @@ Instantiate a QObject-subclass with a timerEvent that calls w->show() every 1000
 
 Notes
 =====
+
+Inline assembly and the JIT
+---------------------------
 
 At the moment, llvm's JIT does not support inline assembler, which is needed for Qt's atomic stuff. For this reason there is a folder qt-hack, which includes modified qatomic-headers that #ifdef the inline asm away and cause the compiler to use the non-inline functions provided by qatomic_sun.s instead.
 These inline-asm issues likely cause other libraries that you might want to use from within cling to make the app crash, as well. An example is Eigen3 - I do have a patched version of Eigen3, too but there is a more elegant way to go:
