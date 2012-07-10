@@ -48,6 +48,7 @@ public slots:
     void writeToConsole(const char* txt);
     void writeToConsole(const QString& txt);
     void enableConsole(bool enable);
+    void clearConsole();
 protected:
     void closeEvent(QCloseEvent *);
 

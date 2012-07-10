@@ -76,6 +76,7 @@ private:
     QString m_unsubmittedText;
     int m_yMargin;
     bool m_multiLineEnabled;
+    int m_indent;
 };
 
 #endif // CODEINPUT_H

@@ -20,8 +20,7 @@ LIBS+=$$system($${LLVM_INSTALL}/bin/llvm-config --ldflags)
 # rdynamic causes symbols to be exported even though this is not a lib
 LIBS += -lm -ldl -fPIC -rdynamic\
 qt-hack/qatomic_sun.o\
--lcling\
--lclang
+-lcling
 
 SOURCES +=\
 main.cpp\

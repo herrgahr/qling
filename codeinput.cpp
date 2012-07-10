@@ -47,6 +47,19 @@ CodeInput::~CodeInput()
     s.setValue("history",m_history);
 }
 
+namespace{
+int calcIndent(QTextCursor c){
+    //select text from beginning to cursor position
+    c.movePosition(QTextCursor::Start,QTextCursor::KeepAnchor);
+    QString txt=c.selectedText();
+    int indent=txt.count('{')-txt.count('}');
+    return qMax(0,indent);
+}
+QString getIndentString(QTextCursor c){
+    return QString(2*::calcIndent(c),' ');
+}
+}
+
 /** handle key-up, key-down and enter/return events
   * return true upon any of these events to prevent
   * QLineEdit from processing them further
@@ -84,9 +97,47 @@ bool CodeInput::eventFilter(QObject *, QEvent *e)
                 currentText.remove(currentText.length()-1,1);
             submit();
             return true;
+        }else if(e->type()==QEvent::KeyRelease){
+            if(!m_multiLineEnabled)
+                return false;
+
+            //sloppy auto-indent
+            QTextCursor c=textCursor();
+            textCursor().insertText(::getIndentString(c));
+
         }
         return false;
     default:
+        /* upon key-release - when QTextEdit already processed the input -
+          *we might need to unindent the line if the first character was
+          *a curly brace
+          * (sloppy auto-indent)
+          */
+        if(e->type() == QEvent::KeyRelease){
+            enum BraceType{Left,Right,None};
+            BraceType braceType=None;
+            if(ke->text()==QString("}"))
+                braceType=Right;
+            else if(ke->text()==QString("{"))
+                braceType=Left;
+            else return false;
+
+            QTextCursor c=textCursor();
+            c.select(QTextCursor::LineUnderCursor);
+            QString t1=c.selectedText();
+            int braceIndex=-1;
+            if(t1.simplified()[0]=='}')
+                braceIndex=t1.indexOf('}');
+//            else if(t1.simplified()[0]=='{')
+//                braceIndex=t1.indexOf('{');
+            if(braceIndex>=0){
+                t1.remove(0,braceIndex);
+                QString indent(2*::calcIndent(textCursor()),' ');
+                t1=indent+t1;
+                c.removeSelectedText();
+                c.insertText(t1);
+            }
+        }
         return false;
     }
 }
@@ -166,7 +217,9 @@ void CodeInput::moveInHistory(int dir)
 
     //I'd expect this to move the cursor to the end of the currently shown
     //text - yet it doesn't. Y u no work?
-    //textCursor().movePosition(QTextCursor::End);
+    QTextCursor c=textCursor();
+    c.movePosition(QTextCursor::End);
+    setTextCursor(c);
 
 }
 
@@ -191,7 +244,6 @@ void CodeInput::submit()
             }
         }
         if(submitChunk){
-            //addToHistory(chunk);
             //chunk will have one trailing '\n' that the user did not enter - remove
             chunk.remove(chunk.length()-1,1);
             emit entered(chunk);
@@ -208,7 +260,6 @@ void CodeInput::submit()
     addToHistory(text());
     clear();
     m_unsubmittedText=QString();
-    //fitSizeToText();
 }
 
 void CodeInput::enableMultiLineMode(bool e)

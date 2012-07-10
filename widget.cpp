@@ -83,6 +83,11 @@ void MainWidget::enableConsole(bool enable)
     m_console->enable(enable);
 }
 
+void MainWidget::clearConsole()
+{
+    m_console->clear();
+}
+
 void MainWidget::closeEvent(QCloseEvent *e)
 {
     QMainWindow::closeEvent(e);

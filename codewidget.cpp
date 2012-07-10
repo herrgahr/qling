@@ -64,12 +64,21 @@ void CodeWidget::processCode(const QString& str)
 {
     static int lastIndent=0;
     QTextCursor cursor=m_codeOutput->textCursor();
+
+    //user might've selected some text so clear selection
+    cursor.clearSelection();
+
     if(!cursor.atEnd())
         cursor.movePosition(QTextCursor::End);
-    QTextCharFormat format=cursor.charFormat();
+
+    //submit code
     int indent = m_metaProcessor->process(str.toStdString().c_str());
+
+    QTextCharFormat format=cursor.charFormat();
     QString indentString;
+
     if(indent > 0){
+        //use yellow background to mark code that is part of incomplete input
         format.setBackground(Qt::yellow);
         for(int i=0;i<qMin(lastIndent,indent);++i)
             indentString+=QString("  ");
