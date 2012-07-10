@@ -39,25 +39,30 @@ Usage
 Qling's main window consists of a text area that displays the code entered so far, a line edit for entering code line by line and a console-output. Enter the following example snippets at the line edit line by line:
 TODO: explain the differences between a .cpp file and the interpreter prompt...
 
-1) Hello, world!
+Hello, world!
+-------------
 
 	#include <iostream>
 	std::cout<<"Hello, world!"<<std::endl;
 
 
-2) qling's main window is made available to the interpreter as the global "MainWindow& qling". Of course MainWindow inherits QWidget. So the simplest example is closing qling:
+Interact with qling itself
+--------------------------
+qling's main window is made available to the interpreter as the global "MainWindow& qling". Of course MainWindow inherits QWidget. So the simplest example is closing qling:
 
 	qling.close();
 
 
-3) Create a simple widget:
+Create a simple widget
+----------------------
 
 	QWidget w;
 	w.show();
 	w.setWindowTitle("Hello, interpreted C++ World");
 
 
-4) Create a dock-widget in qling's main window:
+Create a dock-widget in qling's main window
+-------------------------------------------
 
 	#include <QLabel>
 	#include <QDockWidget>
@@ -71,6 +76,39 @@ TODO: explain the differences between a .cpp file and the interpreter prompt...
 	dynDock->setFloating(true);
 	//and dock it again:
 	dynDock->setFloating(false);
+
+
+Multi-line input
+----------------
+
+In multi-line mode, you can comfortably enter longer chunks of code and submit it in one go. If multi-line mode is active, the key actions to move in the history and submitt code are only triggered when Ctrl is held. so Ctrl+KeyUp and Ctrl+KeyDown move in history, Ctrl+Enter submitts code.
+So you can do stuff like this more naturally:
+
+	#include <QPushButton>
+	#include <QVBoxLayout>
+	QWidget* w=new QWidget;
+	QVBoxLayout* l=new QVBoxLayout(w);
+	QPushButton* b=new QPushButton("close");
+	l->addWidget(b);
+	QObject::connect(b,SIGNAL(clicked()),w,SLOT(close()));
+	w->setMinimumSize(300,300);
+	w->show();
+
+...hit Ctrl+Enter and happlily look at your new widget...
+To make the window pop back up after you close it by pushing the button, we can use this (nonsical) hack:
+Instantiate a QObject-subclass with a timerEvent that calls w->show() every 1000msec.
+
+	#include <QTimerEvent>
+	struct T:public QObject{
+	T():m_timerId(startTimer(1000)){}
+	int m_timerId;
+	void timerEvent(QTimerEvent* e){
+	if(e->timerId()!=m_timerId)return;
+	w->show();
+	}
+	} timerInstance;
+
+...and hit Ctrl+Enter again.
 
 
 
