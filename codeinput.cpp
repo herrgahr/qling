@@ -38,6 +38,7 @@ CodeInput::CodeInput(QWidget *parent)
     m_historyPos=m_history.size();
     setFont(QFont("Monospace"));
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    connect(this,SIGNAL(textChanged()),this,SLOT(fitSizeToText()));
 }
 
 CodeInput::~CodeInput()
@@ -56,10 +57,7 @@ bool CodeInput::eventFilter(QObject *, QEvent *e)
         return false;
     QKeyEvent* ke=static_cast<QKeyEvent*>(e);
     QString currentText=text();
-    if(currentText!=m_oldText){
-        fitSizeToText();
-        m_oldText=currentText;
-    }
+
     switch(ke->key()){
     case Qt::Key_Up:
         if(!m_multiLineEnabled || (ke->modifiers()==Qt::ControlModifier)){
@@ -116,7 +114,8 @@ bool CodeInput::isEmpty() const
 
 void CodeInput::fitSizeToText()
 {
-    setFixedHeight(document()->documentLayout()->documentSize().toSize().height()+m_yMargin);
+    int th=document()->documentLayout()->documentSize().toSize().height();
+    setFixedHeight(th+m_yMargin);
 }
 
 void CodeInput::showEvent(QShowEvent *e)
@@ -157,7 +156,7 @@ void CodeInput::moveInHistory(int dir)
     if(m_historyPos==m_history.size()){
         //clear();
         setText(m_unsubmittedText);
-        fitSizeToText();
+        //fitSizeToText();
         return;
     }
     //if there is unsubmitted text in the line-edit, cache it
@@ -169,8 +168,6 @@ void CodeInput::moveInHistory(int dir)
     //text - yet it doesn't. Y u no work?
     //textCursor().movePosition(QTextCursor::End);
 
-    m_oldText=m_history[m_historyPos];
-    fitSizeToText();
 }
 
 void CodeInput::submit()
@@ -211,7 +208,7 @@ void CodeInput::submit()
     addToHistory(text());
     clear();
     m_unsubmittedText=QString();
-    fitSizeToText();
+    //fitSizeToText();
 }
 
 void CodeInput::enableMultiLineMode(bool e)

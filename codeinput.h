@@ -53,9 +53,6 @@ public:
     QString text()const;
     bool isEmpty()const;
 
-    void fitSizeToText();
-    //void scrollToBottom();
-
 protected:
     void showEvent(QShowEvent *);
 
@@ -63,6 +60,7 @@ signals:
     void entered(const QString& str);
 
 public slots:
+    void fitSizeToText();
     void enableMultiLineMode(bool e);
 
 private:
@@ -73,8 +71,6 @@ private:
     int m_historyPos;
     int m_maxHistorySize;
 
-    //used in eventFilter to check if text has changed
-    QString m_oldText;
     //cache to save text that has neither been submitted nor committed to
     //history
     QString m_unsubmittedText;
