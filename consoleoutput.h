@@ -77,6 +77,8 @@ private:
     QTextStream m_fileStream;
     QFile m_file;
     Mode m_mode;
+    //mode to switch to on next write-command:
+    Mode m_nextMode;
 };
 
 #endif

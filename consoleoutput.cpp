@@ -37,6 +37,7 @@ ConsoleOutput::ConsoleOutput(bool enabled)
     ,m_enabled(false)
     ,m_timerId(0)
     ,m_mode(CompileMode)
+    ,m_nextMode(CompileMode)
 {
     setReadOnly(true);
     setFont(QFont("Monospace"));
@@ -194,23 +195,24 @@ void ConsoleOutput::write(const QString &str)
     cursor.clearSelection();
     if(!cursor.atEnd())
         cursor.movePosition(QTextCursor::End);
+    if(m_mode!=m_nextMode){
+        m_mode=m_nextMode;
+        if(m_mode==CompileMode)
+            write(QString("\n")+QString(80,'c')+QString("\n"));
+        else if(m_mode==AppMode)
+            write(QString("\n")+QString(80,'x')+QString("\n"));
+    }
     cursor.insertText(str);
 }
 
 void ConsoleOutput::enterCompileMode()
 {
-    if(m_mode==CompileMode)
-        return;
-    m_mode=CompileMode;
-    write(QString("\n")+QString(80,'c')+QString("\n"));
+    m_nextMode=CompileMode;
 }
 
 void ConsoleOutput::enterAppMode()
 {
-    if(m_mode==AppMode)
-        return;
-    m_mode=AppMode;
-    write(QString("\n")+QString(80,'x')+QString("\n"));
+    m_nextMode=AppMode;
 }
 
 #endif //NO_CONSOLE_REDIRECT

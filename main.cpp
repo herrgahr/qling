@@ -55,6 +55,18 @@
   *
   */
 
+#include "cling/Interpreter/ValuePrinter.h"
+#include "cling/Interpreter/ValuePrinterInfo.h"
+#include "cling/Interpreter/CValuePrinter.h"
+
+//force linking to these functions
+void neverCalled(){
+    cling::ValuePrinterInfo VPI(0, 0); // asserts, but we don't call.
+    cling::printValueDefault(llvm::outs(), 0, VPI);
+    cling_PrintValue(0, 0, 0);
+    cling::flushOStream(llvm::outs());
+}
+
 int main( int argc, char **argv )
 {
     QApplication a(argc, argv);
@@ -80,7 +92,7 @@ int main( int argc, char **argv )
     interpreter.AddIncludePath("/usr/include/qt4/QtCore");
     interpreter.AddIncludePath("/usr/include/qt4/QtGui");
     interpreter.AddIncludePath("/home/thomas/opt/llvm-debug/include");
-    interpreter.process("#include \"llvm/Support/raw_ostream.h\"");
+    //interpreter.process("#include \"llvm/Support/raw_ostream.h\"");
     interpreter.process("#define __HULA__");
     interpreter.process("extern \"C\" int q_atomic_decrement(volatile int *ptr);");
 
