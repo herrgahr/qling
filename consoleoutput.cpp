@@ -198,9 +198,9 @@ void ConsoleOutput::write(const QString &str)
     if(m_mode!=m_nextMode){
         m_mode=m_nextMode;
         if(m_mode==CompileMode)
-            write(QString("\n")+QString(80,'c')+QString("\n"));
+            write(QString("\n%1 cling output %1\n").arg(QString(33,'c')));
         else if(m_mode==AppMode)
-            write(QString("\n")+QString(80,'x')+QString("\n"));
+            write(QString("\n%1 app output %1\n").arg(QString(34,'x')));
     }
     cursor.insertText(str);
 }
