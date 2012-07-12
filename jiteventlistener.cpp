@@ -5,9 +5,7 @@
 
 void JitEventListener::NotifyFunctionEmitted(const llvm::Function &f, void *, size_t, const llvm::JITEventListener::EmittedFunctionDetails &)
 {
-    //llvm::errs()<<"JIT emitted function: "<<f.getName()<<"\n";
-    std::string fName=f.getName().str();
-    if(fName.find("_Z15__cling_Un1Qu3")==0)
+    if(f.getName().find("__cling_Un1Qu3")!=llvm::StringRef::npos)
         emit aboutToExecWrappedFunction();
 }
 
