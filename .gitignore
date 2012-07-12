@@ -4,7 +4,7 @@ ui_*
 *.user
 log
 Makefile*
-qling
+bin/
 core
 core.*
 tst_*

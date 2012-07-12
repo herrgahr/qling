@@ -2,6 +2,7 @@ QT       += core gui
 
 TARGET = qling
 TEMPLATE = app
+DESTDIR=bin/
 LLVM_INSTALL=$$(LLVM_INSTALL)
 isEmpty(LLVM_INSTALL):error(The environment variable LLVM_INSTALL has to be defined!)
 !exists($${LLVM_INSTALL}/bin/llvm-config):error($${LLVM_INSTALL}/bin/llvm-config not found!)
@@ -34,19 +35,21 @@ LIBS+=\
 LIBS+=$$system($${LLVM_INSTALL}/bin/llvm-config --libs)
 
 SOURCES +=\
-main.cpp\
-widget.cpp \
-consoleoutput.cpp \
-codeinput.cpp \
-codewidget.cpp \
-    jiteventlistener.cpp
+    main.cpp\
+    gui/widget.cpp \
+    gui/consoleoutput.cpp \
+    gui/codeinput.cpp \
+    gui/codewidget.cpp \
+    qling/jiteventlistener.cpp \
+    qling/qling.cpp
 
 HEADERS  +=\
-widget.h \
-consoleoutput.h \
-codeinput.h \
-codewidget.h \
-    jiteventlistener.h
+    gui/widget.h \
+    gui/consoleoutput.h \
+    gui/codeinput.h \
+    gui/codewidget.h \
+    qling/jiteventlistener.h \
+    qling/qling.h
 
 
 
