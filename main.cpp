@@ -26,15 +26,9 @@
 #include <QtGui/QApplication>
 
 #include "llvm/Support/ManagedStatic.h"
-#include "clang/Basic/FileManager.h"
-#include "clang/Basic/LangOptions.h"
-#include "clang/Basic/SourceManager.h"
-#include "clang/Frontend/CompilerInstance.h"
-#include "clang/Frontend/HeaderSearchOptions.h"
 
-#include "cling/Interpreter/Interpreter.h"
-
-#include "widget.h"
+#include "gui/widget.h"
+#include "qling/qling.h"
 
 /* Short outline of how to include cling into an application
   *
@@ -55,18 +49,6 @@
   *
   */
 
-#include "cling/Interpreter/ValuePrinter.h"
-#include "cling/Interpreter/ValuePrinterInfo.h"
-#include "cling/Interpreter/CValuePrinter.h"
-
-//force linking to these functions
-void neverCalled(){
-    cling::ValuePrinterInfo VPI(0, 0); // asserts, but we don't call.
-    cling::printValueDefault(llvm::outs(), 0, VPI);
-    cling_PrintValue(0, 0, 0);
-    cling::flushOStream(llvm::outs());
-}
-
 int main( int argc, char **argv )
 {
     QApplication a(argc, argv);
@@ -78,38 +60,15 @@ int main( int argc, char **argv )
     //llvm::sys::PrintStackTraceOnErrorSignal();
     //llvm::PrettyStackTraceProgram X(argc, argv);
 
-    //---------------------------------------------------------------------------
-    // Set up the interpreter
-    //---------------------------------------------------------------------------
-    cling::Interpreter interpreter(argc, argv,LLVM_INSTALL);
-    if (interpreter.getOptions().Help) {
-        return 0;
-    }
+    Qling qling;
 
-    interpreter.AddIncludePath(".");
-    interpreter.AddIncludePath("./qt-hack/");
-    interpreter.AddIncludePath("/usr/include/qt4");
-    interpreter.AddIncludePath("/usr/include/qt4/QtCore");
-    interpreter.AddIncludePath("/usr/include/qt4/QtGui");
-    interpreter.AddIncludePath("/home/thomas/opt/llvm-debug/include");
-    //interpreter.process("#include \"llvm/Support/raw_ostream.h\"");
-    interpreter.process("#define __HULA__");
-    interpreter.process("extern \"C\" int q_atomic_decrement(volatile int *ptr);");
-
-    interpreter.process("#include \"qatomic.h\"");
-    //interpreter.processLine("#define CLING_HACK");
-    //interpreter.processLine("#include \"eigen3-patched/Eigen/Dense\"");
-
-    MainWidget w(interpreter);
+    MainWidget w(&qling);
     w.show();
 
     //make MainWidget available to the interpreter so the user can invoke
     //qling.foo(bar);
-    interpreter.process("#include \"widget.h\"");
-    std::stringstream initWidget;
-    initWidget<<"MainWidget& qling=*(static_cast<MainWidget*>((void*)"<<(long)&w<<"));";
-    std::string str=initWidget.str();
-    interpreter.process(str);
+    qling.include("gui/widget.h");
+    qling.exportToInterpreter(w,"qling");
 
 
     return a.exec();

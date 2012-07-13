@@ -48,7 +48,7 @@ public:
       * Note: The current history - if longer than s - will not be truncated
       * until the next entry is added
       */
-    void setMaxHistorySize(int s);
+    void setMaxHistorySize(unsigned s);
     int maxHistorySize()const;
     QString text()const;
     bool isEmpty()const;
@@ -69,7 +69,7 @@ private:
     void moveInHistory(int dir);
     QStringList m_history;
     int m_historyPos;
-    int m_maxHistorySize;
+    unsigned m_maxHistorySize;
 
     //cache to save text that has neither been submitted nor committed to
     //history

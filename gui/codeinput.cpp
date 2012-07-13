@@ -114,22 +114,12 @@ bool CodeInput::eventFilter(QObject *, QEvent *e)
           * (sloppy auto-indent)
           */
         if(e->type() == QEvent::KeyRelease){
-            enum BraceType{Left,Right,None};
-            BraceType braceType=None;
-            if(ke->text()==QString("}"))
-                braceType=Right;
-            else if(ke->text()==QString("{"))
-                braceType=Left;
-            else return false;
-
             QTextCursor c=textCursor();
             c.select(QTextCursor::LineUnderCursor);
             QString t1=c.selectedText();
             int braceIndex=-1;
             if(t1.simplified()[0]=='}')
                 braceIndex=t1.indexOf('}');
-//            else if(t1.simplified()[0]=='{')
-//                braceIndex=t1.indexOf('{');
             if(braceIndex>=0){
                 t1.remove(0,braceIndex);
                 QString indent(2*::calcIndent(textCursor()),' ');
@@ -142,10 +132,9 @@ bool CodeInput::eventFilter(QObject *, QEvent *e)
     }
 }
 
-void CodeInput::setMaxHistorySize(int s)
+void CodeInput::setMaxHistorySize(unsigned s)
 {
-    //only values >=0 make sense
-    m_maxHistorySize=qMax(0,s);
+    m_maxHistorySize=s;
 }
 
 int CodeInput::maxHistorySize() const

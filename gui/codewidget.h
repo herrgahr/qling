@@ -29,10 +29,7 @@
 class CodeInput;
 class QTextEdit;
 
-namespace cling{
-    class Interpreter;
-    class MetaProcessor;
-}
+class Qling;
 
 /** Widget that contains a line-edit for entering code
   * and a TextEdit to display code entered so far
@@ -46,17 +43,14 @@ class CodeWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit CodeWidget(cling::Interpreter& interpreter);
+    explicit CodeWidget(Qling *qling);
 
 public slots:
     /** pass str to the interpreter*/
     void processCode(const QString& str);
-signals:
-    void aboutToProcessCode();
 
 private:
-    cling::Interpreter& m_interpreter;
-    cling::MetaProcessor* m_metaProcessor;
+    Qling* m_qling;
     CodeInput* m_codeInput;
     QTextEdit* m_codeOutput;
 

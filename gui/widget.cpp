@@ -33,17 +33,14 @@
 #include "consoleoutput.h"
 #include "codewidget.h"
 
-#include "jiteventlistener.h"
-#include "llvm/ExecutionEngine/ExecutionEngine.h"
-#include "cling/Interpreter/Interpreter.h"
+#include "qling/qling.h"
 
 
-MainWidget::MainWidget(cling::Interpreter& interpreter)
+MainWidget::MainWidget(Qling* qling)
     :QMainWindow()
     ,m_console(new ConsoleOutput)
     ,m_consoleDock(new QDockWidget("stdout && stderr"))
-    ,m_codeWidget(new CodeWidget(interpreter))
-    ,m_jitEventListener(new JitEventListener)
+    ,m_codeWidget(new CodeWidget(qling))
 //    ,m_gdbDock(new QDockWidget("gdb"))
 //    ,m_gdb(Bridge::instance()->gdb())
 {
@@ -65,10 +62,9 @@ MainWidget::MainWidget(cling::Interpreter& interpreter)
 
 //    connect(m_codeWidget,SIGNAL(aboutToProcess()),m_gdb.output(),SLOT(insertSeparator()));
 
-    interpreter.getExecutionEngine()->RegisterJITEventListener(m_jitEventListener);
-    connect(m_jitEventListener,SIGNAL(aboutToExecWrappedFunction()),
+    connect(qling,SIGNAL(aboutToExec()),
             m_console,SLOT(enterAppMode()));
-    connect(m_codeWidget,SIGNAL(aboutToProcessCode()),
+    connect(qling,SIGNAL(aboutToProcess()),
             m_console,SLOT(enterCompileMode()));
 }
 
@@ -77,7 +73,6 @@ MainWidget::~MainWidget()
     QSettings s;
     s.setValue("geometry",saveGeometry());
     s.setValue("mainWindowState",saveState());
-    delete m_jitEventListener;
     //delete m_metaProcessor;
 }
 

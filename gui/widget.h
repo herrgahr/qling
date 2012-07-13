@@ -35,6 +35,7 @@ class QDockWidget;
 namespace cling{
     class Interpreter;
 }
+class Qling;
 
 
 class MainWidget : public QMainWindow
@@ -42,7 +43,7 @@ class MainWidget : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWidget(cling::Interpreter& interpreter);
+    MainWidget(Qling* interpreter);
     ~MainWidget();
 
 public slots:
@@ -58,7 +59,6 @@ private:
     QDockWidget* m_consoleDock;
     CodeWidget* m_codeWidget;
     QDockWidget* m_gdbDock;
-    JitEventListener* m_jitEventListener;
 //    Gdb& m_gdb;
 };
 
