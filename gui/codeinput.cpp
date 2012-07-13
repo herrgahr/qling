@@ -192,11 +192,11 @@ void CodeInput::moveInHistory(int dir)
         return;
     }
 
-    //if we're past m_history's last entry, clear text
+    //if we're past m_history's last entry, insert "unsubmitted" text
+    // -> it will be either empty or the last text the user entered
+    //without pressing enter
     if(m_historyPos==m_history.size()){
-        //clear();
         setText(m_unsubmittedText);
-        //fitSizeToText();
         return;
     }
     //if there is unsubmitted text in the line-edit, cache it
@@ -216,12 +216,25 @@ void CodeInput::submit()
 {
     if(isEmpty())
         return;
+    //split text into single lines and collect consecutive lines starting
+    //with '#' /starting with anything else but '#' into chunks and submit those
+    //example:
+    //
+    //#include <iostream>
+    //#include <cstdio>
+    //-----new chunk------
+    //std::cout<<"Hello, World\n";
+    //printf("Hello, World\n");
+    //-----new chunk------
+    //#define TXT "hello, world\n"
+    //-----new chunk------
+    //std::cout<<TXT;
+    //
     bool collectPreprocessor=false;
     bool submitChunk=false;
     QString chunk;
-    QStringList split=text().split('\n');
-    while(!split.isEmpty()){
-        if(split[0][0]=='#'){
+    foreach(QString line,text().split('\n')){
+        if(line.startsWith('#')){
             if(!collectPreprocessor){
                 submitChunk=!chunk.isEmpty();
                 collectPreprocessor=true;
@@ -239,8 +252,8 @@ void CodeInput::submit()
             chunk=QString();
             submitChunk=false;
         }
-        chunk+=split[0]+'\n';
-        split.pop_front();
+        //QString::split removed '\n' - put it back
+        chunk+=line+'\n';
     }
 
     //chunk will have one trailing '\n' that the user did not enter - remove

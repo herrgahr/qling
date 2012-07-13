@@ -33,6 +33,7 @@
 namespace cling{
 class MetaProcessor;
 }
+//TODO write unit-test!!!
 class Qling : public QObject
 {
     Q_OBJECT
@@ -49,6 +50,7 @@ public:
     /** #include <header>*/
     void includeSystemHeader(const QString& header);
 
+    //TODO test these!!!
     void exportToInterpreter(const QString& typeName, void* obj, const QString& name);
 
     template<typename T>
@@ -58,15 +60,12 @@ public:
 
     template<typename T>
     void exportToInterpreter(const QString& typeName, T* obj, const QString& name){
-        exportToInterpreter(typeName,(void*)&obj,name);
+        exportToInterpreter(typeName,(void*)obj,name);
     }
 
     void exportToInterpreter(QObject* obj,const QString& name);
     void exportToInterpreter(QObject& obj,const QString& name);
     void exportToInterpreter(const QObject& obj,const QString& name);
-
-    //TODO: remove after refactoring!!!
-    cling::Interpreter& interpreter(){return m_interpreter;}
 
 public slots:
     void process(const QString& expr);

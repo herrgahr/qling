@@ -33,13 +33,9 @@
 /* Short outline of how to include cling into an application
   *
   * Create and configure and instance of cling::Interpreter
-  *   (happens here in main.cpp)
-  *
   * Create an instance of cling::MetaProcessor.
-  *   (happens in codewidget.cpp)
-  *
   * Feed code to the interpreter via MetaProcessor::process
-  *   (happens in codewidget.cpp, too)
+  * (see qling.cpp)
   *
   * That's it :)
   *

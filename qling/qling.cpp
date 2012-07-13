@@ -50,8 +50,8 @@ void neverCalled(){
 
 void Qling::init()
 {
-    m_interpreter.AddIncludePath(".");
-    m_interpreter.AddIncludePath("./qt-hack/");
+    m_interpreter.AddIncludePath("../");
+    m_interpreter.AddIncludePath("../qt-hack/");
 
     QString QtIncDir=QLibraryInfo::location(QLibraryInfo::HeadersPath);
     addIncludePath(QtIncDir);
@@ -73,6 +73,11 @@ void Qling::init()
 }
 
 namespace{
+/* in case we don't want to pass any command line arguments to cling, we still
+  * have to pass the application's path as argv[0] in Cling::Interpreter's
+  * constructor (i.e. when initializing m_interpreter). To make this work in the
+  * initializer, create a static "fake" const char** argv
+  */
 const char* const* makeArgv(){
     static std::string argv0(QApplication::applicationFilePath().toStdString());
     static const char* argv[1]={argv0.data()};
@@ -113,10 +118,12 @@ void Qling::exportToInterpreter(const QString &typeName, void *obj,const QString
 {
     QString stmt;
     QString rawType=typeName.simplified();
+    bool exportAsPointer=rawType.endsWith('*');
+    //use regexp?
     rawType.remove('&');
     rawType.remove('*');
     rawType=rawType.trimmed();
-    bool exportAsPointer=typeName.simplified().endsWith('*');
+
     //produce sth like:
     //Type& qling=*static_cast<Type*>((void*)47315771);"
     //or
@@ -126,8 +133,7 @@ void Qling::exportToInterpreter(const QString &typeName, void *obj,const QString
             .arg(name)
             .arg(exportAsPointer?' ':'*')
             .arg(rawType)
-            .arg(intptr_t(obj))
-            ;
+            .arg(intptr_t(obj));
     process(stmt);
 }
 

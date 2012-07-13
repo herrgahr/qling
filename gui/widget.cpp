@@ -41,8 +41,6 @@ MainWidget::MainWidget(Qling* qling)
     ,m_console(new ConsoleOutput)
     ,m_consoleDock(new QDockWidget("stdout && stderr"))
     ,m_codeWidget(new CodeWidget(qling))
-//    ,m_gdbDock(new QDockWidget("gdb"))
-//    ,m_gdb(Bridge::instance()->gdb())
 {
     QSettings s;
     restoreGeometry(s.value("geometry").toByteArray());
@@ -53,14 +51,8 @@ MainWidget::MainWidget(Qling* qling)
     m_consoleDock->setObjectName("consoleDock");
     addDockWidget(Qt::BottomDockWidgetArea,m_consoleDock);
 
-//    m_gdbDock->setWidget(m_gdb.output());
-//    m_gdbDock->setObjectName("gdbDock");
-//    addDockWidget(Qt::TopDockWidgetArea,m_gdbDock);
-//    m_gdb.start();
     restoreState(s.value("mainWindowState").toByteArray());
     show();
-
-//    connect(m_codeWidget,SIGNAL(aboutToProcess()),m_gdb.output(),SLOT(insertSeparator()));
 
     connect(qling,SIGNAL(aboutToExec()),
             m_console,SLOT(enterAppMode()));
@@ -73,7 +65,6 @@ MainWidget::~MainWidget()
     QSettings s;
     s.setValue("geometry",saveGeometry());
     s.setValue("mainWindowState",saveState());
-    //delete m_metaProcessor;
 }
 
 void MainWidget::writeToConsole(const char *txt)
