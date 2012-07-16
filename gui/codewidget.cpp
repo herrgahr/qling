@@ -56,8 +56,9 @@ CodeWidget::CodeWidget(Qling* qling)
     layout->addLayout(hl);
     m_codeInput->setFocus();
     connect(m_codeInput,SIGNAL(entered(QString)),this,SLOT(processCode(QString)));
+    connect(qling,SIGNAL(aboutToMoc()),m_codeInput,SLOT(disallowInput()));
+    connect(qling,SIGNAL(doneMocing()),m_codeInput,SLOT(allowInput()));
 }
-
 
 void CodeWidget::processCode(const QString& str)
 {
@@ -72,7 +73,7 @@ void CodeWidget::processCode(const QString& str)
 
     //submit code
     //int indent = m_metaProcessor->process(str.toStdString().c_str());
-    m_qling->process(str);
+    m_qling->processUserInput(str);
 
 //    QTextCharFormat format=cursor.charFormat();
     QString indentString;
