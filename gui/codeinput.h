@@ -62,6 +62,8 @@ signals:
 public slots:
     void fitSizeToText();
     void enableMultiLineMode(bool e);
+    void disallowInput();
+    void allowInput();
 
 private:
     void submit();

@@ -268,3 +268,13 @@ void CodeInput::enableMultiLineMode(bool e)
 {
     m_multiLineEnabled=e;
 }
+
+void CodeInput::disallowInput()
+{
+    setEnabled(false);
+}
+
+void CodeInput::allowInput()
+{
+    setEnabled(true);
+}
