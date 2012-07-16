@@ -8,3 +8,4 @@ bin/
 core
 core.*
 tst_*
+.cling_history
