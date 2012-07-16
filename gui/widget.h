@@ -44,7 +44,6 @@ class MainWidget : public QMainWindow
 
 public:
     MainWidget(Qling* interpreter);
-    ~MainWidget();
 
 public slots:
     void writeToConsole(const char* txt);

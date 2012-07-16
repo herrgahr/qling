@@ -42,29 +42,22 @@ MainWidget::MainWidget(Qling* qling)
     ,m_consoleDock(new QDockWidget("stdout && stderr"))
     ,m_codeWidget(new CodeWidget(qling))
 {
-    QSettings s;
-    restoreGeometry(s.value("geometry").toByteArray());
 
     setCentralWidget(m_codeWidget);
+    m_codeWidget->setObjectName("codeWidget");
 
     m_consoleDock->setWidget(m_console);
     m_consoleDock->setObjectName("consoleDock");
     addDockWidget(Qt::BottomDockWidgetArea,m_consoleDock);
 
-    restoreState(s.value("mainWindowState").toByteArray());
-    show();
-
     connect(qling,SIGNAL(aboutToExec()),
             m_console,SLOT(enterAppMode()));
     connect(qling,SIGNAL(aboutToProcess()),
             m_console,SLOT(enterCompileMode()));
-}
 
-MainWidget::~MainWidget()
-{
     QSettings s;
-    s.setValue("geometry",saveGeometry());
-    s.setValue("mainWindowState",saveState());
+    restoreGeometry(s.value("geometry").toByteArray());
+    restoreState(s.value("mainWindowState").toByteArray());
 }
 
 void MainWidget::writeToConsole(const char *txt)
@@ -89,6 +82,9 @@ void MainWidget::clearConsole()
 
 void MainWidget::closeEvent(QCloseEvent *e)
 {
+    QSettings s;
+    s.setValue("geometry",saveGeometry());
+    s.setValue("mainWindowState",saveState());
     QMainWindow::closeEvent(e);
     QApplication::closeAllWindows();
 }
