@@ -9,6 +9,7 @@ isEmpty(LLVM_INSTALL):error(The environment variable LLVM_INSTALL has to be defi
 
 
 #DEFINES+=NO_CONSOLE_REDIRECT
+#DEFINES+=PATCHED_CLING
 
 DEFINES+=LLVM_INSTALL=\\\"$${LLVM_INSTALL}\\\"
 
@@ -41,7 +42,8 @@ SOURCES +=\
     gui/codeinput.cpp \
     gui/codewidget.cpp \
     qling/jiteventlistener.cpp \
-    qling/qling.cpp
+    qling/qling.cpp \
+    qling/tests.cpp
 
 HEADERS  +=\
     gui/widget.h \
@@ -49,7 +51,8 @@ HEADERS  +=\
     gui/codeinput.h \
     gui/codewidget.h \
     qling/jiteventlistener.h \
-    qling/qling.h
+    qling/qling.h \
+    qling/tests.h
 
 
 
