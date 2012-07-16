@@ -50,6 +50,7 @@ void neverCalled(){
 
 void Qling::init()
 {
+    m_interpreter.AddIncludePath(".");
     m_interpreter.AddIncludePath("../");
     m_interpreter.AddIncludePath("../qt-hack/");
 
@@ -85,18 +86,57 @@ const char* const* makeArgv(){
 }
 }
 
+#ifdef PATCHED_CLING
 Qling::Qling(const char *llvm_install)
-    :m_interpreter(1,
+    :m_ConstructorExtractor(new ConstructorExtractor)
+    ,m_QObjectMacroFinder(new QObjectMacroFinder)
+    ,m_interpreter(1,
                    ::makeArgv(),
-                   llvm_install?llvm_install:LLVM_INSTALL)
+                   cling::InterpreterOptions(llvm_install?llvm_install:LLVM_INSTALL)
+                   .ASTConsumerPreCodeGen(m_ConstructorExtractor)
+                   .PPCallbacks(m_QObjectMacroFinder))
 {
     init();
 }
 
 Qling::Qling(int argc, char *argv[], const char *llvm_install)
-    :m_interpreter(argc,argv,llvm_install?llvm_install:LLVM_INSTALL)
+    :m_ConstructorExtractor(new ConstructorExtractor)
+    ,m_QObjectMacroFinder(new QObjectMacroFinder)
+    ,m_interpreter(argc,argv,
+                   cling::InterpreterOptions(llvm_install?llvm_install:LLVM_INSTALL)
+                   .ASTConsumerPreCodeGen(m_ConstructorExtractor)
+                   .PPCallbacks(m_QObjectMacroFinder))
 {
     init();
+}
+#else
+Qling::Qling(const char *llvm_install)
+    :m_ConstructorExtractor(new ConstructorExtractor)
+    ,m_QObjectMacroFinder(new QObjectMacroFinder)
+    ,m_interpreter(1,
+                   ::makeArgv(),
+                   llvm_install?llvm_install:LLVM_INSTALL))
+{
+    init();
+}
+
+Qling::Qling(int argc, char *argv[], const char *llvm_install)
+    :m_ConstructorExtractor(new ConstructorExtractor)
+    ,m_QObjectMacroFinder(new QObjectMacroFinder)
+    ,m_interpreter(argc,argv,
+                   llvm_install?llvm_install:LLVM_INSTALL))
+{
+    init();
+}
+#endif //PATCHED_CLING
+
+Qling::~Qling()
+{
+#ifndef PATCHED_CLING
+    delete m_ConstructorExtractor;
+    delete m_QObjectMacroFinder;
+#endif
+    delete m_metaProcessor;
 }
 
 void Qling::addIncludePath(const QString &path)
@@ -157,7 +197,77 @@ void Qling::exportToInterpreter(const QObject& obj,const QString& name)
 
 void Qling::process(const QString &expr)
 {
+    m_ConstructorExtractor->clear();
+    m_QObjectMacroFinder->clear();
     emit aboutToProcess();
-    m_interpreter.process(expr.toStdString());
+    m_metaProcessor->process(qPrintable(expr));
+
+
+
+}
+
+void Qling::processUserInput(const QString &expr)
+{
+    process(expr);
+#ifdef PATCHED_CLING
+    if(!m_QObjectMacroFinder->m_QObjectTokens.empty())
+        moc(expr);
+
+#endif //PATCHED_CLING
+}
+
+#include <QProcess>
+#include <QEventLoop>
+#include <QDebug>
+#include <QTimer>
+#include <iostream>
+
+void Qling::moc(const QString &input)
+{
+    emit aboutToMoc();
+
+    std::cout<<"MOCing input...\n";
+    QString mocPath=QLibraryInfo::location(QLibraryInfo::BinariesPath)
+            +QString("/moc");
+    QProcess mocProcess;
+    QEventLoop el;
+
+    m_mocOutput.clear();
+
+    mocProcess.start(mocPath);
+    connect(&mocProcess,SIGNAL(readyReadStandardOutput()),this,SLOT(mocWrote()));
+    connect(&mocProcess,SIGNAL(finished(int)),&el,SLOT(quit()));
+    mocProcess.write(input.toAscii());
+    //moc reads until EOF so close the write-channel
+    mocProcess.closeWriteChannel();
+
+    //if something goes wrong, cancel the event-loop after 10s
+    QTimer::singleShot(10000,&el,SLOT(quit()));
+    el.exec();
+
+    if(!m_mocOutput.isEmpty()){
+        std::cout<<"... moc is done\n";
+        m_interpreter.declare(m_mocOutput.toStdString());
+    }else{
+        std::cout<<"... moc failed\n";
+    }
+
+    emit doneMocing();
+}
+
+void Qling::mocWrote()
+{
+    QProcess* p=qobject_cast<QProcess*>(sender());
+    if(!p)
+        return;
+    QByteArray ba=p->readAll();
+    m_mocOutput=QString(ba);
+}
+
+void Qling::mocDone()
+{
+    QProcess* p=qobject_cast<QProcess*>(sender());
+    if(!p)
+        return;
 }
 

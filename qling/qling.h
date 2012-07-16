@@ -29,6 +29,7 @@
 
 #include "cling/Interpreter/Interpreter.h"
 #include "jiteventlistener.h"
+#include "tests.h"
 
 namespace cling{
 class MetaProcessor;
@@ -41,6 +42,7 @@ class Qling : public QObject
 public:
     explicit Qling(const char *llvm_install=0);
     Qling(int argc, char *argv[],const char* llvm_install=0);
+    virtual ~Qling();
 
     void addIncludePath(const QString& path);
 
@@ -69,16 +71,27 @@ public:
 
 public slots:
     void process(const QString& expr);
+    void processUserInput(const QString& expr);
 signals:
     void aboutToProcess();
     void aboutToExec();
+    void aboutToMoc();
+    void doneMocing();
+
+private slots:
+    void mocWrote();
+    void mocDone();
 
 private:
-
+    void moc(const QString& input);
     //private member variables
+    //testing-stuff
+    ConstructorExtractor* m_ConstructorExtractor;//don't own, don't delete
+    QObjectMacroFinder* m_QObjectMacroFinder;//don't own, don't delete
     cling::Interpreter m_interpreter;
     cling::MetaProcessor* m_metaProcessor;
     JitEventListener m_jitEventListener;
+    QString m_mocOutput;
 
 };
 
