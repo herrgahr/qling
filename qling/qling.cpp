@@ -195,29 +195,30 @@ void Qling::exportToInterpreter(const QObject& obj,const QString& name)
                         (void*)&obj,name);
 }
 
-void Qling::process(const QString &expr)
+int Qling::process(const QString &expr)
 {
     m_ConstructorExtractor->clear();
     m_QObjectMacroFinder->clear();
     emit aboutToProcess();
-    m_metaProcessor->process(qPrintable(expr));
-
-
-
+    //unfortunately, MetaProcessor::process does not indicate if there was an
+    //error - it only returns "expected indentation", i.e. >0 if the input
+    //was incomplete
+    return m_metaProcessor->process(qPrintable(expr));
 }
 
-void Qling::processUserInput(const QString &expr)
+int Qling::processUserInput(const QString &expr)
 {
-    process(expr);
+    int indent=process(expr);
 #ifdef PATCHED_CLING
     if(!m_QObjectMacroFinder->m_QObjectTokens.empty())
         moc(expr);
 #else
     //dumbed-down version: just look for the string. If it's a false positive
     //(for whatever reason) then moc will just fail and nothing is lost
-    if(expr.contains("Q_OBJECT"))
+    if(!indent && expr.contains("Q_OBJECT"))
         moc(expr);
 #endif //PATCHED_CLING
+    return indent;
 }
 
 #include <QProcess>

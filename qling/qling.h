@@ -70,8 +70,8 @@ public:
     void exportToInterpreter(const QObject& obj,const QString& name);
 
 public slots:
-    void process(const QString& expr);
-    void processUserInput(const QString& expr);
+    int process(const QString& expr);
+    int processUserInput(const QString& expr);
 signals:
     void aboutToProcess();
     void aboutToExec();
