@@ -57,7 +57,13 @@ struct QObjectMacroFinder : public clang::PPCallbacks{
     std::vector<std::string> m_QObjectTokens;
     void clear();
 };
-
+#else
+struct ConstructorExtractor{
+    void clear(){}
+};
+struct QObjectMacroFinder{
+    void clear(){}
+};
 #endif //PATCHED_CLING
 
 #endif // TESTS_H

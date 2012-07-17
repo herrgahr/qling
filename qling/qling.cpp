@@ -115,7 +115,7 @@ Qling::Qling(const char *llvm_install)
     ,m_QObjectMacroFinder(new QObjectMacroFinder)
     ,m_interpreter(1,
                    ::makeArgv(),
-                   llvm_install?llvm_install:LLVM_INSTALL))
+                   llvm_install?llvm_install:LLVM_INSTALL)
 {
     init();
 }
@@ -124,7 +124,7 @@ Qling::Qling(int argc, char *argv[], const char *llvm_install)
     :m_ConstructorExtractor(new ConstructorExtractor)
     ,m_QObjectMacroFinder(new QObjectMacroFinder)
     ,m_interpreter(argc,argv,
-                   llvm_install?llvm_install:LLVM_INSTALL))
+                   llvm_install?llvm_install:LLVM_INSTALL)
 {
     init();
 }
@@ -212,7 +212,11 @@ void Qling::processUserInput(const QString &expr)
 #ifdef PATCHED_CLING
     if(!m_QObjectMacroFinder->m_QObjectTokens.empty())
         moc(expr);
-
+#else
+    //dumbed-down version: just look for the string. If it's a false positive
+    //(for whatever reason) then moc will just fail and nothing is lost
+    if(expr.contains("Q_OBJECT"))
+        moc(expr);
 #endif //PATCHED_CLING
 }
 
