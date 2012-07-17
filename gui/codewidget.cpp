@@ -62,7 +62,7 @@ CodeWidget::CodeWidget(Qling* qling)
 
 void CodeWidget::processCode(const QString& str)
 {
-//    static int lastIndent=0;
+    static int lastIndent=0;
     QTextCursor cursor=m_codeOutput->textCursor();
 
     //user might've selected some text so clear selection
@@ -73,21 +73,21 @@ void CodeWidget::processCode(const QString& str)
 
     //submit code
     //int indent = m_metaProcessor->process(str.toStdString().c_str());
-    m_qling->processUserInput(str);
+    int indent=m_qling->processUserInput(str);
 
-//    QTextCharFormat format=cursor.charFormat();
+    QTextCharFormat format=cursor.charFormat();
     QString indentString;
 
-//    if(indent > 0){
-//        //use yellow background to mark code that is part of incomplete input
-//        format.setBackground(Qt::yellow);
-//        for(int i=0;i<qMin(lastIndent,indent);++i)
-//            indentString+=QString("  ");
-//    }else if(lastIndent>0)
-//        format.setBackground(palette().base());
-//    lastIndent=indent;
+    if(indent > 0){
+        //use yellow background to mark code that is part of incomplete input
+        format.setBackground(Qt::yellow);
+        for(int i=0;i<qMin(lastIndent,indent);++i)
+            indentString+=QString("  ");
+    }else if(lastIndent>0)
+        format.setBackground(palette().base());
+    lastIndent=indent;
 
-    cursor.insertText(indentString+str+QString("\n")/*,format*/);
+    cursor.insertText(indentString+str+QString("\n"),format);
     m_codeOutput->verticalScrollBar()->setValue(m_codeOutput->verticalScrollBar()->maximum());
 }
 
