@@ -34,6 +34,7 @@
 namespace cling{
 class MetaProcessor;
 }
+
 //TODO write unit-test!!!
 class Qling : public QObject
 {
@@ -41,7 +42,7 @@ class Qling : public QObject
     void init();
 public:
     explicit Qling(const char *llvm_install=0);
-    Qling(int argc, char *argv[],const char* llvm_install=0);
+    Qling(int argc, const char *argv[],const char* llvm_install=0);
     virtual ~Qling();
 
     void addIncludePath(const QString& path);
@@ -72,6 +73,7 @@ public:
 public slots:
     int process(const QString& expr);
     int processUserInput(const QString& expr);
+    void enableTiming(bool b);
 signals:
     void aboutToProcess();
     void aboutToExec();
@@ -92,7 +94,7 @@ private:
     cling::MetaProcessor* m_metaProcessor;
     JitEventListener m_jitEventListener;
     QString m_mocOutput;
-
+    bool m_timing;
 };
 
 #endif //QLING_H

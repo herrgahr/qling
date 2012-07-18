@@ -40,6 +40,7 @@
 #include "cling/Interpreter/CValuePrinter.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 
+
 //force linking to these functions
 void neverCalled(){
     cling::ValuePrinterInfo VPI(0, 0);
@@ -59,7 +60,7 @@ void Qling::init()
     addIncludePath(QtIncDir+"/QtCore");
     addIncludePath(QtIncDir+"/QtGui");
 
-    m_interpreter.AddIncludePath("/home/thomas/opt/llvm-debug/include");
+    //m_interpreter.AddIncludePath("/home/thomas/opt/llvm-debug/include");
     m_interpreter.process("#define __HULA__");
     m_interpreter.process("extern \"C\" int q_atomic_decrement(volatile int *ptr);");
 
@@ -71,6 +72,13 @@ void Qling::init()
     connect(&m_jitEventListener,SIGNAL(aboutToExecWrappedFunction()),
             this,SIGNAL(aboutToExec()));
     m_metaProcessor=new cling::MetaProcessor(m_interpreter);
+
+    enableTiming(false);
+
+#ifdef PATCHED_CLING
+    m_interpreter.setUserASTConsumer(m_ConstructorExtractor);
+    m_interpreter.setPPCallbacks(m_QObjectMacroFinder);
+#endif
 }
 
 namespace{
@@ -79,37 +87,13 @@ namespace{
   * constructor (i.e. when initializing m_interpreter). To make this work in the
   * initializer, create a static "fake" const char** argv
   */
-const char* const* makeArgv(){
+const char** makeArgv(){
     static std::string argv0(QApplication::applicationFilePath().toStdString());
     static const char* argv[1]={argv0.data()};
     return argv;
 }
 }
 
-#ifdef PATCHED_CLING
-Qling::Qling(const char *llvm_install)
-    :m_ConstructorExtractor(new ConstructorExtractor)
-    ,m_QObjectMacroFinder(new QObjectMacroFinder)
-    ,m_interpreter(1,
-                   ::makeArgv(),
-                   cling::InterpreterOptions(llvm_install?llvm_install:LLVM_INSTALL)
-                   .ASTConsumerPreCodeGen(m_ConstructorExtractor)
-                   .PPCallbacks(m_QObjectMacroFinder))
-{
-    init();
-}
-
-Qling::Qling(int argc, char *argv[], const char *llvm_install)
-    :m_ConstructorExtractor(new ConstructorExtractor)
-    ,m_QObjectMacroFinder(new QObjectMacroFinder)
-    ,m_interpreter(argc,argv,
-                   cling::InterpreterOptions(llvm_install?llvm_install:LLVM_INSTALL)
-                   .ASTConsumerPreCodeGen(m_ConstructorExtractor)
-                   .PPCallbacks(m_QObjectMacroFinder))
-{
-    init();
-}
-#else
 Qling::Qling(const char *llvm_install)
     :m_ConstructorExtractor(new ConstructorExtractor)
     ,m_QObjectMacroFinder(new QObjectMacroFinder)
@@ -120,7 +104,7 @@ Qling::Qling(const char *llvm_install)
     init();
 }
 
-Qling::Qling(int argc, char *argv[], const char *llvm_install)
+Qling::Qling(int argc, const char *argv[], const char *llvm_install)
     :m_ConstructorExtractor(new ConstructorExtractor)
     ,m_QObjectMacroFinder(new QObjectMacroFinder)
     ,m_interpreter(argc,argv,
@@ -128,7 +112,6 @@ Qling::Qling(int argc, char *argv[], const char *llvm_install)
 {
     init();
 }
-#endif //PATCHED_CLING
 
 Qling::~Qling()
 {
@@ -194,12 +177,20 @@ void Qling::exportToInterpreter(const QObject& obj,const QString& name)
     exportToInterpreter(QString("const %1&").arg(obj.metaObject()->className()),
                         (void*)&obj,name);
 }
-
+#include <QElapsedTimer>
+#include <iostream>
 int Qling::process(const QString &expr)
 {
     m_ConstructorExtractor->clear();
     m_QObjectMacroFinder->clear();
     emit aboutToProcess();
+    if(m_timing){
+        QElapsedTimer timer;
+        timer.start();
+        int ret=m_metaProcessor->process(qPrintable(expr));
+        std::cout<<"Elapsed time: "<<timer.elapsed()<<std::endl;
+        return ret;
+    }
     //unfortunately, MetaProcessor::process does not indicate if there was an
     //error - it only returns "expected indentation", i.e. >0 if the input
     //was incomplete
@@ -219,6 +210,11 @@ int Qling::processUserInput(const QString &expr)
         moc(expr);
 #endif //PATCHED_CLING
     return indent;
+}
+
+void Qling::enableTiming(bool b)
+{
+    m_timing=b;
 }
 
 #include <QProcess>
