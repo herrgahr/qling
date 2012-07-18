@@ -50,6 +50,7 @@ public slots:
     void writeToConsole(const QString& txt);
     void enableConsole(bool enable);
     void clearConsole();
+    void enableTiming(bool b);
 protected:
     void closeEvent(QCloseEvent *);
 
@@ -58,6 +59,7 @@ private:
     QDockWidget* m_consoleDock;
     CodeWidget* m_codeWidget;
     QDockWidget* m_gdbDock;
+    Qling* m_interpreter;
 //    Gdb& m_gdb;
 };
 

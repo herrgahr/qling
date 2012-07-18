@@ -41,6 +41,7 @@ MainWidget::MainWidget(Qling* qling)
     ,m_console(new ConsoleOutput)
     ,m_consoleDock(new QDockWidget("stdout && stderr"))
     ,m_codeWidget(new CodeWidget(qling))
+    ,m_interpreter(qling)
 {
 
     setCentralWidget(m_codeWidget);
@@ -78,6 +79,11 @@ void MainWidget::enableConsole(bool enable)
 void MainWidget::clearConsole()
 {
     m_console->clear();
+}
+
+void MainWidget::enableTiming(bool b)
+{
+    m_interpreter->enableTiming(b);
 }
 
 void MainWidget::closeEvent(QCloseEvent *e)
