@@ -147,16 +147,16 @@ ConsoleOutput::ConsoleOutput(bool enabled)
 
 void ConsoleOutput::enable(bool enable)
 {
-    if(m_enabled==enable)
+    if(m_enabled == enable)
         return;
-    m_enabled=enable;
+    m_enabled = enable;
     if(enable){
         m_pipe[READ] = 0;
         m_pipe[WRITE] = 0;
 
         pipe(m_pipe);
-        m_oldStdOut=dup(fileno(stdout));
-        m_oldStdErr=dup(fileno(stderr));
+        m_oldStdOut = dup(fileno(stdout));
+        m_oldStdErr = dup(fileno(stderr));
         if (m_oldStdOut == -1 || m_oldStdErr == -1)
             return;
 
@@ -165,7 +165,7 @@ void ConsoleOutput::enable(bool enable)
         dup2(m_pipe[WRITE], fileno(stdout));
         dup2(m_pipe[WRITE], fileno(stderr));
 
-        m_timerId=startTimer(100);
+        m_timerId = startTimer(100);
         m_file.setFileName("log");
         m_file.open(QFile::WriteOnly);
         m_fileStream.setDevice(&m_file);
@@ -195,7 +195,7 @@ ConsoleOutput::~ConsoleOutput()
 
 void ConsoleOutput::timerEvent(QTimerEvent *e)
 {
-    if(e->timerId()!=m_timerId)
+    if(e->timerId() != m_timerId)
         return;
 
     poll();
@@ -203,16 +203,16 @@ void ConsoleOutput::timerEvent(QTimerEvent *e)
         return;
 
     // make sure no text is selected, move cursor to end of document
-    QTextCursor crs=textCursor();
+    QTextCursor crs = textCursor();
     crs.clearSelection();
     crs.movePosition(QTextCursor::End);
     setTextCursor(crs);
 
     if (m_parseColors) {
-        printColorCoded2(m_captured);
+        printColorCoded(m_captured);
     } else {
         QRegExp rx("\033\[[0-9;]*m");
-        QString str=m_captured;
+        QString str = m_captured;
         str.remove(rx);
         textCursor().insertText(str);
     }
@@ -241,10 +241,10 @@ bool ConsoleOutput::poll()
 
     timeval timeout;
 
-    timeout.tv_sec=0;
-    timeout.tv_usec=10000;
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 10000;
 
-    if(select(FD_SETSIZE,&fdset,NULL,NULL,&timeout)!=1)
+    if(select(FD_SETSIZE, &fdset, NULL, NULL, &timeout) != 1)
         return false;
 
     int bytesRead = 0;
@@ -268,11 +268,11 @@ void ConsoleOutput::write(const QString &str)
     cursor.clearSelection();
     if(!cursor.atEnd())
         cursor.movePosition(QTextCursor::End);
-    if(m_mode!=m_nextMode){
-        m_mode=m_nextMode;
-        if(m_mode==CompileMode)
+    if(m_mode != m_nextMode){
+        m_mode = m_nextMode;
+        if(m_mode == CompileMode)
             write(QString("\n%1 cling output %1\n").arg(QString(33,'c')));
-        else if(m_mode==AppMode)
+        else if(m_mode == AppMode)
             write(QString("\n%1 app output %1\n").arg(QString(34,'x')));
     }
     cursor.insertText(str);
@@ -280,17 +280,17 @@ void ConsoleOutput::write(const QString &str)
 
 void ConsoleOutput::enterCompileMode()
 {
-    m_nextMode=CompileMode;
+    m_nextMode = CompileMode;
 }
 
 void ConsoleOutput::enterAppMode()
 {
-    m_nextMode=AppMode;
+    m_nextMode = AppMode;
 }
 
 void ConsoleOutput::enableColors(bool b)
 {
-    m_parseColors=b;
+    m_parseColors = b;
     unsigned highlight = 0;
     unsigned fgIdx = 7;
     unsigned bgIdx = 0;
@@ -309,8 +309,8 @@ void ConsoleOutput::printPerfTimers()
                     )
             .arg(m_perfTimers[PerfRead])
             .arg(m_perfTimers[PerfPrint]);
-    for(unsigned i=P0;i<PerfCount;++i)
-        html+=QString("P%1: <b> %2msec</b><br/>").arg(i-P0).arg(m_perfTimers[i]);
+    for(unsigned i = P0; i < PerfCount; ++i)
+        html += QString("P%1: <b> %2msec</b><br/>").arg(i - P0).arg(m_perfTimers[i]);
     html+="<br/>";
     textCursor().clearSelection();
     textCursor().movePosition(QTextCursor::End);
@@ -345,8 +345,8 @@ void ConsoleOutput::smaller()
 void ConsoleOutput::printColorCoded(const QString &input)
 {
     show();
-    QTextCursor crs=textCursor();
-    QTextCharFormat fmt=crs.charFormat();
+    QTextCursor crs = textCursor();
+    QTextCharFormat fmt = crs.charFormat();
     QRegExp rx("\033\[[0-9;]*m");
     unsigned highlight = 0;
     unsigned fgIdx = 7;
@@ -355,12 +355,12 @@ void ConsoleOutput::printColorCoded(const QString &input)
     fmt.setBackground(palDark[bgIdx]);
     fmt.setFontWeight(QFont::Normal);
     crs.setCharFormat(fmt);
-    int pos=0;
-    int lastpos=0;
+    int pos = 0;
+    int lastpos = 0;
     unsigned commit = 1;
     QString acum;
     while((pos=rx.indexIn(input,pos)) != -1) {
-        QString cap=rx.cap();
+        QString cap = rx.cap();
         if(cap == QLatin1String("\033[m")) {
             highlight = 0;
             fgIdx = 7;
@@ -368,22 +368,22 @@ void ConsoleOutput::printColorCoded(const QString &input)
             commit = 1;
         } else {
             foreach(QString str,
-                    cap.mid(2,cap.length()-3).split(';', QString::SkipEmptyParts)) {
+                    cap.mid(2, cap.length() - 3).split(';', QString::SkipEmptyParts)) {
                 bool ok;
-                int i=str.toInt(&ok);
+                int i = str.toInt(&ok);
                 if(!ok)
                     continue;
                 if (i == 1) {
                     commit |= unsigned(highlight - 1);
                     highlight = 1;
                 } else if (i >= 30 && i < 38) {
-                    commit |= unsigned(fgIdx - (i-30));
-                    fgIdx = i-30;
+                    commit |= unsigned(fgIdx - (i - 30));
+                    fgIdx = i - 30;
                 } else if (i >= 40 && i < 48) {
-                    commit |= unsigned(bgIdx - (i-40));
-                    bgIdx = i-40;
+                    commit |= unsigned(bgIdx - (i - 40));
+                    bgIdx = i - 40;
                 } else if (i == 0) {
-                    commit=1;
+                    commit = 1;
                     highlight = 0;
                     fgIdx = 7;
                     bgIdx = 0;
@@ -402,143 +402,21 @@ void ConsoleOutput::printColorCoded(const QString &input)
             acum.clear();
         }
 
-        pos+=rx.matchedLength();
-        lastpos=pos;
+        pos += rx.matchedLength();
+        lastpos = pos;
     }
-    crs.insertText(acum + input.mid(lastpos));
-}
-
-namespace{
-bool parseNumber(QString& str,
-                 unsigned &highlight,
-                 unsigned &fgIdx,
-                 unsigned &bgIdx,
-                 unsigned& commit)
-{
-    if (str.isEmpty()) {
-        // ;0; or ;; resets and continues parsing
-        commit=1;
-        highlight = 0;
-        fgIdx = 7;
-        bgIdx = 0;
-        return true;
-    }
-    bool ok;
-    int i=str.toInt(&ok);
-    str.clear();
-    if(!ok) {
-        // ;x; resets and stops parsing
-        commit=1;
-        highlight = 0;
-        fgIdx = 7;
-        bgIdx = 0;
-        return false;
-    }
-    if (i == 1) {
-        commit |= unsigned(highlight - 1);
-        highlight = 1;
-    } else if (i >= 30 && i < 38) {
-        commit |= unsigned(fgIdx - (i-30));
-        fgIdx = i-30;
-    } else if (i >= 40 && i < 48) {
-        commit |= unsigned(bgIdx - (i-40));
-        bgIdx = i-40;
-    } else if (i == 0) {
-        // ;0; or ;; resets and continues parsing
-        commit=1;
-        highlight = 0;
-        fgIdx = 7;
-        bgIdx = 0;
-        return true;
-    }
-    return true;
-}
-}
-
-void ConsoleOutput::printColorCoded2(const QString &input)
-{
-    show();
-    QElapsedTimer timer1;
-    QElapsedTimer timer2;
-    QElapsedTimer timer3;
-    QTextCursor crs=textCursor();
-    crs.insertBlock();
-    QTextCharFormat fmt=crs.charFormat();
-    unsigned highlight = 0;
-    unsigned fgIdx = 7;
-    unsigned bgIdx = 0;
-    fmt.setForeground(palF[highlight][fgIdx]);
-    fmt.setBackground(palDark[bgIdx]);
-    fmt.setFontWeight(QFont::Normal);
-    crs.setCharFormat(fmt);
-    int pos=0;
-    int lastpos=0;
-    unsigned commit = 1;
-    QString acum;
-    timer1.restart();
-    while((pos = input.indexOf('\033',pos)) != -1) {
-        timer2.restart();
-        int startPos=pos;
-        if(input[++pos] != '[')
-            continue;
-        QString num;
-        bool stopParsing = false;
-        m_fileStream<<"\n";
-        while(!stopParsing) {
-            QChar c=input[++pos];
-            m_fileStream<<"  c: "<<c<<" ";
-            if(c.isDigit())
-                num+=c;
-            else if(c == ';') {
-                m_fileStream<<"num: "<<num<<"  ";
-                stopParsing = !::parseNumber(num,highlight,fgIdx,bgIdx,commit);
-            } else if (c == 'm') {
-                m_fileStream<<"num: "<<num<<"  ";
-                ::parseNumber(num,highlight,fgIdx,bgIdx,commit);
-                stopParsing = true;
-            } else {
-                highlight = 0;
-                fgIdx = 7;
-                bgIdx = 0;
-                commit = true;
-                stopParsing = true;
-            }
-
-            if(stopParsing) {
-                m_fileStream<<"<cancel>\n";
-                break;
-            }
-        }
-
-        acum+=input.mid(lastpos, startPos - lastpos);
-        timeAccum(P1,timer2);
-        if(commit) {
-            timer3.restart();
-            crs.insertText(acum);
-            fmt.setForeground(palF[highlight][fgIdx]);
-            fmt.setBackground(palDark[bgIdx]);
-            fmt.setFontWeight(highlight ? QFont::Bold : QFont::Normal);
-            crs.setCharFormat(fmt);
-            commit = 0;
-            acum.clear();
-            timeAccum(P2,timer3);
-        }
-        lastpos=pos+1;
-
-    }
-    time(P0,timer1);
     crs.insertText(acum + input.mid(lastpos));
 }
 
 void ConsoleOutput::time(unsigned timerId, QElapsedTimer &timer)
 {
-    m_perfTimers[timerId]=timer.nsecsElapsed();
+    m_perfTimers[timerId] = timer.nsecsElapsed();
     timer.restart();
 }
 
 void ConsoleOutput::timeAccum(unsigned timerId, QElapsedTimer &timer)
 {
-    m_perfTimers[timerId]+=timer.nsecsElapsed();
+    m_perfTimers[timerId] += timer.nsecsElapsed();
     timer.restart();
 }
 
