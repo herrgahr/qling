@@ -36,9 +36,9 @@ CodeWidget::CodeWidget(Qling* qling)
     :QWidget()
     ,m_qling(qling)
 {
-    setContentsMargins(0,0,0,0);
+    setContentsMargins(0, 0, 0, 0);
     QVBoxLayout* layout = new QVBoxLayout(this);
-    layout->setContentsMargins(0,0,0,0);
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
     m_codeOutput = new QTextEdit;
     m_codeOutput->setFont(QFont("Monospace"));
@@ -51,21 +51,21 @@ CodeWidget::CodeWidget(Qling* qling)
 
     m_codeInput = new CodeInput;
     hl->addWidget(m_codeInput);
-    connect(enableMultiLine,SIGNAL(toggled(bool)),
-            m_codeInput,SLOT(enableMultiLineMode(bool)));
-    connect(enableMultiLine,SIGNAL(released()),
-            m_codeInput,SLOT(setFocus()));
+    connect(enableMultiLine, SIGNAL(toggled(bool)),
+            m_codeInput, SLOT(enableMultiLineMode(bool)));
+    connect(enableMultiLine, SIGNAL(released()),
+            m_codeInput, SLOT(setFocus()));
     layout->addLayout(hl);
     m_codeInput->setFocus();
-    connect(m_codeInput,SIGNAL(entered(QString)),this,SLOT(processCode(QString)));
-    connect(qling,SIGNAL(aboutToMoc()),m_codeInput,SLOT(disallowInput()));
-    connect(qling,SIGNAL(doneMocing()),m_codeInput,SLOT(allowInput()));
+    connect(m_codeInput, SIGNAL(entered(QString)), this, SLOT(processCode(QString)));
+    connect(qling, SIGNAL(aboutToMoc()), m_codeInput, SLOT(disallowInput()));
+    connect(qling, SIGNAL(doneMocing()), m_codeInput, SLOT(allowInput()));
 }
 
 void CodeWidget::processCode(const QString& str)
 {
-    static int lastIndent=0;
-    QTextCursor cursor=m_codeOutput->textCursor();
+//    static int lastIndent = 0;
+    QTextCursor cursor = m_codeOutput->textCursor();
 
     //user might've selected some text so clear selection
     cursor.clearSelection();
@@ -75,9 +75,9 @@ void CodeWidget::processCode(const QString& str)
 
     //submit code
     //int indent = m_metaProcessor->process(str.toStdString().c_str());
-    m_inputStartPosition=m_codeOutput->textCursor().position();
-    cursor.insertText(str+QString("\n"));
-    int indent=m_qling->processUserInput(str);
+    m_inputStartPosition = m_codeOutput->textCursor().position();
+    cursor.insertText(str + QString("\n"));
+    /*int indent = */m_qling->processUserInput(str);
 
 //    QTextCharFormat format=cursor.charFormat();
 //    QString indentString;
