@@ -41,6 +41,8 @@ CodeWidget::CodeWidget(Qling* qling)
     layout->setContentsMargins(0,0,0,0);
     layout->setSpacing(0);
     m_codeOutput = new QTextEdit;
+    m_codeOutput->setFont(QFont("Monospace"));
+    m_codeOutput->setReadOnly(true);
     layout->addWidget(m_codeOutput);
 
     QHBoxLayout* hl = new QHBoxLayout;
