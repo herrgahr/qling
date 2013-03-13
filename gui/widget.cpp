@@ -118,13 +118,6 @@ void MainWidget::display(const QPixmap &px)
     label->show();
 }
 
-void MainWidget::dockConsole()
-{
-    QDockWidget* cDock = new QDockWidget(QLatin1String("stdout & stderr"), this);
-    cDock->setWidget(m_console);
-    addDockWidget(Qt::RightDockWidgetArea, cDock);
-}
-
 void MainWidget::closeEvent(QCloseEvent *e)
 {
     QSettings s;

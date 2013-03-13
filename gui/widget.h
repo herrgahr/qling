@@ -56,7 +56,6 @@ public slots:
     void printPerfTimers();
     void setParseVar(unsigned);
     void display(const QPixmap& px);
-    void dockConsole();
 protected:
     void closeEvent(QCloseEvent *);
 
