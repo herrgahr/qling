@@ -23,8 +23,18 @@
 
 #include "qling.h"
 
+#include <iostream>
+
 #include <QApplication>
 #include <QLibraryInfo>  //for Qt header locations
+#include <QElapsedTimer>
+#include <iostream>
+#include <QProcess>
+#include <QEventLoop>
+#include <QDebug>
+#include <QTimer>
+#include <QStringList>
+
 
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 
@@ -40,45 +50,64 @@
 #include "cling/Interpreter/CValuePrinter.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 
+namespace Eigen{
+//to be able to use Eigen, we need to provide the cpuid function, which replaces inline asm in eigen-patched/
+namespace qlinghack{
+void cpuid(int (&abcd)[4], int func, int id) {
+#  if defined(__GNUC__) && ( defined(__i386__) || defined(__x86_64__) )
+#    if defined(__PIC__) && defined(__i386__)
+       // Case for x86 with PIC
+         __asm__ __volatile__ ("xchgl %%ebx, %%esi;cpuid; xchgl %%ebx,%%esi": "=a" (abcd[0]), "=S" (abcd[1]), "=c" (abcd[2]), "=d" (abcd[3]) : "a" (func), "c" (id));
+#    else
+       // Case for x86_64 or x86 w/o PIC
+         __asm__ __volatile__ ("cpuid": "=a" (abcd[0]), "=b" (abcd[1]), "=c" (abcd[2]), "=d" (abcd[3]) : "a" (func), "c" (id) );
+#    endif
+#  elif defined(_MSC_VER)
+#    if (_MSC_VER > 1500) && ( defined(_M_IX86) || defined(_M_X64) )
+        __cpuidex((int*)abcd,func,id)
+#    endif
+#  endif
+
+}
+}
+}
+
 
 //force linking to these functions
 void neverCalled(){
     cling::ValuePrinterInfo VPI(0, 0);
-    cling::printValueDefault(llvm::outs(), 0, VPI);
+    cling::printValuePublicDefault(llvm::outs(), 0, VPI);
+    //cling::printValuePublic(llvm::outs(), 0, )
     cling_PrintValue(0, 0, 0);
     cling::flushOStream(llvm::outs());
 }
 
-void Qling::init()
+void Qling::init(const char* llvm_install)
 {
     m_interpreter.AddIncludePath(".");
-    m_interpreter.AddIncludePath("../");
+    m_interpreter.AddIncludePath("../"); // we're inside bin/ so add ../ as well
     m_interpreter.AddIncludePath("../qt-hack/");
 
     QString QtIncDir=QLibraryInfo::location(QLibraryInfo::HeadersPath);
     addIncludePath(QtIncDir);
-    addIncludePath(QtIncDir+"/QtCore");
-    addIncludePath(QtIncDir+"/QtGui");
-
-    //m_interpreter.AddIncludePath("/home/thomas/opt/llvm-debug/include");
-    m_interpreter.process("#define __HULA__");
-    m_interpreter.process("extern \"C\" int q_atomic_decrement(volatile int *ptr);");
-
-    m_interpreter.process("#include \"qatomic.h\"");
-    //m_interpreter.processLine("#define CLING_HACK");
-    //m_interpreter.processLine("#include \"eigen3-patched/Eigen/Dense\"");
+    //add some Qt include paths, added as needed
+    addIncludePath(QtIncDir + "/QtCore");
+    addIncludePath(QtIncDir + "/QtGui");
 
     m_interpreter.getExecutionEngine()->RegisterJITEventListener(&m_jitEventListener);
-    connect(&m_jitEventListener,SIGNAL(aboutToExecWrappedFunction()),
-            this,SIGNAL(aboutToExec()));
-    m_metaProcessor=new cling::MetaProcessor(m_interpreter);
+    connect(&m_jitEventListener, SIGNAL(aboutToExecWrappedFunction()),
+            this, SIGNAL(aboutToExec()));
+    m_metaProcessor = new cling::MetaProcessor(m_interpreter, llvm::outs());
 
     enableTiming(false);
 
-#ifdef PATCHED_CLING
-    m_interpreter.setUserASTConsumer(m_ConstructorExtractor);
-    m_interpreter.setPPCallbacks(m_QObjectMacroFinder);
-#endif
+    m_interpreter.process("#define QLING_QATOMIC_HACK");
+    m_interpreter.process("#include \"qt-hack/QtCore/qatomic.h\"");
+    m_interpreter.process("#define EIGEN_QLING_HACK");
+    QString eigenPath(QLING_BASE_DIR);
+    eigenPath += "/eigen-patched";
+    addIncludePath(eigenPath);
+    process(QString("#define LLVM_INSTALL \"%1\"").arg(LLVM_INSTALL));
 }
 
 namespace{
@@ -89,36 +118,30 @@ namespace{
   */
 const char** makeArgv(){
     static std::string argv0(QApplication::applicationFilePath().toStdString());
-    static const char* argv[1]={argv0.data()};
+    static char a0[] = "-fcolor-diagnostics";
+    static char a1[] = "-std=c++11";
+    static const char* argv[3] = {argv0.data(), a0, a1};
     return argv;
+}
+const char* llvmInstall(const char* llvm_install) {
+    return llvm_install ? llvm_install : LLVM_INSTALL;
 }
 }
 
 Qling::Qling(const char *llvm_install)
-    :m_ConstructorExtractor(new ConstructorExtractor)
-    ,m_QObjectMacroFinder(new QObjectMacroFinder)
-    ,m_interpreter(1,
-                   ::makeArgv(),
-                   llvm_install?llvm_install:LLVM_INSTALL)
+    :m_interpreter(3, ::makeArgv(), ::llvmInstall(llvm_install))
 {
-    init();
+    init(::llvmInstall(llvm_install));
 }
 
 Qling::Qling(int argc, const char *argv[], const char *llvm_install)
-    :m_ConstructorExtractor(new ConstructorExtractor)
-    ,m_QObjectMacroFinder(new QObjectMacroFinder)
-    ,m_interpreter(argc,argv,
-                   llvm_install?llvm_install:LLVM_INSTALL)
+    :m_interpreter(argc,argv,::llvmInstall(llvm_install))
 {
-    init();
+    init(::llvmInstall(llvm_install));
 }
 
 Qling::~Qling()
 {
-#ifndef PATCHED_CLING
-    delete m_ConstructorExtractor;
-    delete m_QObjectMacroFinder;
-#endif
     delete m_metaProcessor;
 }
 
@@ -140,8 +163,8 @@ void Qling::includeSystemHeader(const QString &header)
 void Qling::exportToInterpreter(const QString &typeName, void *obj,const QString& name)
 {
     QString stmt;
-    QString rawType=typeName.simplified();
-    bool exportAsPointer=rawType.endsWith('*');
+    QString rawType = typeName.simplified();
+    bool exportAsPointer = rawType.endsWith('*');
     //use regexp?
     rawType.remove('&');
     rawType.remove('*');
@@ -154,7 +177,7 @@ void Qling::exportToInterpreter(const QString &typeName, void *obj,const QString
     stmt=QString("%1 %2=%3static_cast<%4*>((void*)%5);")
             .arg(typeName)
             .arg(name)
-            .arg(exportAsPointer?' ':'*')
+            .arg(exportAsPointer ? ' ' : '*')
             .arg(rawType)
             .arg(intptr_t(obj));
     process(stmt);
@@ -163,72 +186,79 @@ void Qling::exportToInterpreter(const QString &typeName, void *obj,const QString
 void Qling::exportToInterpreter(QObject *obj,const QString& name)
 {
     exportToInterpreter(QString("%1*").arg(obj->metaObject()->className()),
-                        (void*)&obj,name);
+                        (void*)&obj, name);
 }
 
 void Qling::exportToInterpreter(QObject& obj,const QString& name)
 {
     exportToInterpreter(QString("%1&").arg(obj.metaObject()->className()),
-                        (void*)&obj,name);
+                        (void*)&obj, name);
 }
 
 void Qling::exportToInterpreter(const QObject& obj,const QString& name)
 {
     exportToInterpreter(QString("const %1&").arg(obj.metaObject()->className()),
-                        (void*)&obj,name);
+                        (void*)&obj, name);
 }
-#include <QElapsedTimer>
-#include <iostream>
+
 int Qling::process(const QString &expr)
 {
-    m_ConstructorExtractor->clear();
-    m_QObjectMacroFinder->clear();
     emit aboutToProcess();
     if(m_timing){
         QElapsedTimer timer;
         timer.start();
-        int ret=m_metaProcessor->process(qPrintable(expr));
+        int ret = m_metaProcessor->process(qPrintable(expr));
         std::cout<<"Elapsed time: "<<timer.elapsed()<<std::endl;
         return ret;
     }
     //unfortunately, MetaProcessor::process does not indicate if there was an
     //error - it only returns "expected indentation", i.e. >0 if the input
     //was incomplete
-    return m_metaProcessor->process(qPrintable(expr));
-}
-
-int Qling::processUserInput(const QString &expr)
-{
-    int indent=process(expr);
-#ifdef PATCHED_CLING
-    if(!m_QObjectMacroFinder->m_QObjectTokens.empty())
-        moc(expr);
-#else
+    int indent = m_metaProcessor->process(qPrintable(expr));
     //dumbed-down version: just look for the string. If it's a false positive
     //(for whatever reason) then moc will just fail and nothing is lost
     if(!indent && expr.contains("Q_OBJECT"))
         moc(expr);
-#endif //PATCHED_CLING
     return indent;
+}
+
+int Qling::processUserInput(const QString &expr)
+{
+    int indent = process(expr);
+    return indent;
+}
+
+void Qling::processUserInputMultiLine(const QString &expr)
+{
+    QString ppStuff;
+    QStringList code;
+    for(const QString& str: expr.split('\n')) {
+        if(str.startsWith('#')) {
+            ppStuff += str;
+            ppStuff += '\n';
+        } else {
+            code.append(str + '\n');
+        }
+    }
+    if(!ppStuff.isEmpty())
+        process(ppStuff);
+    if(!code.isEmpty()) {
+        for(const QString& cd: code)
+            process(cd);
+    }
 }
 
 void Qling::enableTiming(bool b)
 {
-    m_timing=b;
+    m_timing = b;
 }
-
-#include <QProcess>
-#include <QEventLoop>
-#include <QDebug>
-#include <QTimer>
-#include <iostream>
 
 void Qling::moc(const QString &input)
 {
     emit aboutToMoc();
 
     std::cout<<"MOCing input...\n";
-    QString mocPath=QLibraryInfo::location(QLibraryInfo::BinariesPath)
+    QString mocPath = QLibraryInfo::location(QLibraryInfo::BinariesPath)
             +QString("/moc");
     QProcess mocProcess;
     QEventLoop el;
@@ -236,14 +266,14 @@ void Qling::moc(const QString &input)
     m_mocOutput.clear();
 
     mocProcess.start(mocPath);
-    connect(&mocProcess,SIGNAL(readyReadStandardOutput()),this,SLOT(mocWrote()));
-    connect(&mocProcess,SIGNAL(finished(int)),&el,SLOT(quit()));
+    connect(&mocProcess, SIGNAL(readyReadStandardOutput()), this, SLOT(mocWrote()));
+    connect(&mocProcess, SIGNAL(finished(int)), &el, SLOT(quit()));
     mocProcess.write(input.toAscii());
     //moc reads until EOF so close the write-channel
     mocProcess.closeWriteChannel();
 
     //if something goes wrong, cancel the event-loop after 10s
-    QTimer::singleShot(10000,&el,SLOT(quit()));
+    QTimer::singleShot(10000, &el, SLOT(quit()));
     el.exec();
 
     if(!m_mocOutput.isEmpty()){
@@ -258,16 +288,16 @@ void Qling::moc(const QString &input)
 
 void Qling::mocWrote()
 {
-    QProcess* p=qobject_cast<QProcess*>(sender());
+    QProcess* p = qobject_cast<QProcess*>(sender());
     if(!p)
         return;
-    QByteArray ba=p->readAll();
-    m_mocOutput=QString(ba);
+    QByteArray ba = p->readAll();
+    m_mocOutput = QString(ba);
 }
 
 void Qling::mocDone()
 {
-    QProcess* p=qobject_cast<QProcess*>(sender());
+    QProcess* p = qobject_cast<QProcess*>(sender());
     if(!p)
         return;
 }

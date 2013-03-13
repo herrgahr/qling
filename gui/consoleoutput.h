@@ -28,16 +28,11 @@
 #include <QTextStream>
 #include <QFile>
 
-#ifdef NO_CONSOLE_REDIRECT
-#include <QLabel>
-struct ConsoleOutput:public QLabel{
-    ConsoleOutput(){
-        setAlignment(Qt::AlignCenter);
-        setTextFormat(Qt::RichText);
-        setText("<h1>Console disabled</h1>");
-    }
+class QElapsedTimer;
+
+struct stdout_tie_stream_buf : std::streambuf {
+    int sync()override;
 };
-#else
 
 /** Console-widget
   *
@@ -51,12 +46,15 @@ class ConsoleOutput : public QTextEdit
 {
     Q_OBJECT
 public:
+    explicit ConsoleOutput(QWidget* parent, bool enabled = true);
     explicit ConsoleOutput(bool enabled=true);
     ~ConsoleOutput();
     void enable(bool enable);
 
 protected:
     void timerEvent(QTimerEvent *);
+    bool poll();
+    void mouseDoubleClickEvent(QMouseEvent *e);
 
 signals:
 
@@ -64,8 +62,19 @@ public slots:
     void write(const QString& str);
     void enterCompileMode();
     void enterAppMode();
+    void enableColors(bool b);
+    void printPerfTimers();
+    void setParseVar(unsigned v);
+    void scrollToBottom();
+    void bigger();
+    void smaller();
 
 private:
+    void printColorCoded(const QString& input);
+    void printColorCoded2(const QString& input);
+    void time(unsigned timerId,QElapsedTimer& timer);
+    void timeAccum(unsigned timerId,QElapsedTimer& timer);
+    void resetTimes();
     enum Mode{AppMode,CompileMode};
     bool m_enabled;
     int m_timerId;
@@ -73,14 +82,20 @@ private:
     int m_pipe[2];
     int m_oldStdOut;
     int m_oldStdErr;
-    std::string m_captured;
+    QByteArray m_captured;
     QTextStream m_fileStream;
     QFile m_file;
     Mode m_mode;
     //mode to switch to on next write-command:
     Mode m_nextMode;
-};
+    bool m_parseColors;
+    enum{PerfRead,PerfPrint,P0,P1,P2,P3,PerfCount};
+    qint64 m_perfTimers[PerfCount];
+    unsigned m_parseVar;
 
-#endif
+    std::ostream m_stdout_tie_stream;
+    stdout_tie_stream_buf m_stdout_tie_stream_buf;
+    friend struct stdout_tie_stream_buf;
+};
 
 #endif // CONSOLEOUTPUT_H

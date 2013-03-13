@@ -29,6 +29,7 @@
 
 #include "gui/widget.h"
 #include "qling/qling.h"
+#include <iostream>
 
 /* Short outline of how to include cling into an application
   *
@@ -62,10 +63,9 @@ int main( int argc, char **argv )
     w.show();
 
     //make MainWidget available to the interpreter so the user can invoke
-    //qling.foo(bar);
+    //sth like: "qling.foo(bar);"
     qling.include("gui/widget.h");
-    qling.exportToInterpreter(w,"qling");
-
+    qling.exportToInterpreter(w, "qling");
 
     return a.exec();
 }

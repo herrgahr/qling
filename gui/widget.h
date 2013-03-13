@@ -37,7 +37,6 @@ namespace cling{
 }
 class Qling;
 
-
 class MainWidget : public QMainWindow
 {
     Q_OBJECT
@@ -45,22 +44,27 @@ class MainWidget : public QMainWindow
 public:
     MainWidget(Qling* interpreter);
 
+    Qling* qling();
+
 public slots:
     void writeToConsole(const char* txt);
     void writeToConsole(const QString& txt);
     void enableConsole(bool enable);
     void clearConsole();
     void enableTiming(bool b);
+    void enableColors(bool b);
+    void printPerfTimers();
+    void setParseVar(unsigned);
+    void display(const QPixmap& px);
+    void dockConsole();
 protected:
     void closeEvent(QCloseEvent *);
 
 private:
-    ConsoleOutput* m_console;
-    QDockWidget* m_consoleDock;
     CodeWidget* m_codeWidget;
     QDockWidget* m_gdbDock;
     Qling* m_interpreter;
-//    Gdb& m_gdb;
+    ConsoleOutput* m_console;
 };
 
 #endif // WIDGET_H

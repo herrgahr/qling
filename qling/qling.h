@@ -39,7 +39,7 @@ class MetaProcessor;
 class Qling : public QObject
 {
     Q_OBJECT
-    void init();
+    void init(const char *llvm_install);
 public:
     explicit Qling(const char *llvm_install=0);
     Qling(int argc, const char *argv[],const char* llvm_install=0);
@@ -73,6 +73,7 @@ public:
 public slots:
     int process(const QString& expr);
     int processUserInput(const QString& expr);
+    void processUserInputMultiLine(const QString& expr);
     void enableTiming(bool b);
 signals:
     void aboutToProcess();
@@ -84,12 +85,10 @@ private slots:
     void mocWrote();
     void mocDone();
 
-private:
+protected:
     void moc(const QString& input);
     //private member variables
     //testing-stuff
-    ConstructorExtractor* m_ConstructorExtractor;//don't own, don't delete
-    QObjectMacroFinder* m_QObjectMacroFinder;//don't own, don't delete
     cling::Interpreter m_interpreter;
     cling::MetaProcessor* m_metaProcessor;
     JitEventListener m_jitEventListener;

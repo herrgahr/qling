@@ -34,29 +34,29 @@ CodeInput::CodeInput(QWidget *parent)
 {
     installEventFilter(this);
     QSettings s;
-    m_history=s.value("history").toStringList();
-    m_historyPos=m_history.size();
+    m_history = s.value("history").toStringList();
+    m_historyPos = m_history.size();
     setFont(QFont("Monospace"));
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    connect(this,SIGNAL(textChanged()),this,SLOT(fitSizeToText()));
+    connect(this, SIGNAL(textChanged()), this, SLOT(fitSizeToText()));
 }
 
 CodeInput::~CodeInput()
 {
     QSettings s;
-    s.setValue("history",m_history);
+    s.setValue("history", m_history);
 }
 
 namespace{
 int calcIndent(QTextCursor c){
     //select text from beginning to cursor position
-    c.movePosition(QTextCursor::Start,QTextCursor::KeepAnchor);
-    QString txt=c.selectedText();
-    int indent=txt.count('{')-txt.count('}');
-    return qMax(0,indent);
+    c.movePosition(QTextCursor::Start, QTextCursor::KeepAnchor);
+    QString txt = c.selectedText();
+    int indent = txt.count('{') - txt.count('}');
+    return qMax(0, indent);
 }
 QString getIndentString(QTextCursor c){
-    return QString(2*::calcIndent(c),' ');
+    return QString(2*::calcIndent(c), ' ');
 }
 }
 
@@ -66,22 +66,22 @@ QString getIndentString(QTextCursor c){
   */
 bool CodeInput::eventFilter(QObject *, QEvent *e)
 {
-    if(e->type()!=QEvent::KeyPress && e->type()!=QEvent::KeyRelease)
+    if(e->type() != QEvent::KeyPress && e->type() != QEvent::KeyRelease)
         return false;
-    QKeyEvent* ke=static_cast<QKeyEvent*>(e);
-    QString currentText=text();
+    QKeyEvent* ke = static_cast<QKeyEvent*>(e);
+    QString currentText = text();
 
     switch(ke->key()){
     case Qt::Key_Up:
-        if(!m_multiLineEnabled || (ke->modifiers()==Qt::ControlModifier)){
-            if(e->type()==QEvent::KeyRelease)
+        if(!m_multiLineEnabled || (ke->modifiers() == Qt::ControlModifier)){
+            if(e->type() == QEvent::KeyRelease)
                 moveInHistory(-1);
             return true;
         }
         return false;
     case Qt::Key_Down:
-        if(!m_multiLineEnabled || (ke->modifiers()==Qt::ControlModifier)){
-            if(e->type()==QEvent::KeyRelease)
+        if(!m_multiLineEnabled || (ke->modifiers() == Qt::ControlModifier)){
+            if(e->type() == QEvent::KeyRelease)
                 moveInHistory(1);
             return true;
         }
@@ -90,19 +90,19 @@ bool CodeInput::eventFilter(QObject *, QEvent *e)
     case Qt::Key_Enter:
         if(currentText.isEmpty())
             return true;
-        if(!m_multiLineEnabled || (ke->modifiers()==Qt::ControlModifier)){
-            if(e->type()==QEvent::KeyRelease)
+        if(!m_multiLineEnabled || (ke->modifiers() == Qt::ControlModifier)){
+            if(e->type() == QEvent::KeyRelease)
                 return true;
             if(currentText.endsWith("\n"))
-                currentText.remove(currentText.length()-1,1);
+                currentText.remove(currentText.length() - 1, 1);
             submit();
             return true;
-        }else if(e->type()==QEvent::KeyRelease){
+        }else if(e->type() == QEvent::KeyRelease){
             if(!m_multiLineEnabled)
                 return false;
 
             //sloppy auto-indent
-            QTextCursor c=textCursor();
+            QTextCursor c = textCursor();
             textCursor().insertText(::getIndentString(c));
 
         }
@@ -114,16 +114,16 @@ bool CodeInput::eventFilter(QObject *, QEvent *e)
           * (sloppy auto-indent)
           */
         if(e->type() == QEvent::KeyRelease){
-            QTextCursor c=textCursor();
+            QTextCursor c = textCursor();
             c.select(QTextCursor::LineUnderCursor);
-            QString t1=c.selectedText();
-            int braceIndex=-1;
-            if(t1.simplified()[0]=='}')
-                braceIndex=t1.indexOf('}');
-            if(braceIndex>=0){
-                t1.remove(0,braceIndex);
-                QString indent(2*::calcIndent(textCursor()),' ');
-                t1=indent+t1;
+            QString t1 = c.selectedText();
+            int braceIndex = -1;
+            if(t1.simplified()[0] == '}')
+                braceIndex = t1.indexOf('}');
+            if(braceIndex >= 0){
+                t1.remove(0, braceIndex);
+                QString indent(2*::calcIndent(textCursor()), ' ');
+                t1 = indent + t1;
                 c.removeSelectedText();
                 c.insertText(t1);
             }
@@ -154,59 +154,59 @@ bool CodeInput::isEmpty() const
 
 void CodeInput::fitSizeToText()
 {
-    int th=document()->documentLayout()->documentSize().toSize().height();
-    setFixedHeight(th+m_yMargin);
+    int th = document()->documentLayout()->documentSize().toSize().height();
+    setFixedHeight(th + m_yMargin);
 }
 
 void CodeInput::showEvent(QShowEvent *e)
 {
     QTextEdit::showEvent(e);
-    int wh=viewport()->height();
-    int h=height();
-    m_yMargin=h-wh;
+    int wh = viewport()->height();
+    int h = height();
+    m_yMargin = h - wh;
     fitSizeToText();
 }
 
 void CodeInput::addToHistory(const QString &str)
 {
-    if(m_history.isEmpty() || m_history.back()!=str)
+    if(m_history.isEmpty() || m_history.back() != str)
         m_history.append(str);
 
     //truncate to m_maxHistorySize
     //Need while-loop here in case m_maxHistory has been changed since last call
-    while(m_history.size()>m_maxHistorySize)
+    while(m_history.size() > m_maxHistorySize)
         m_history.pop_front();
 
-    m_historyPos=m_history.size();
+    m_historyPos = m_history.size();
     QSettings s;
     s.setValue("history",m_history);
 }
 
 void CodeInput::moveInHistory(int dir)
 {
-    m_historyPos+=dir;
+    m_historyPos += dir;
 
     //if we just moved past m_history's bounds undo change and return
-    if(m_historyPos<0 || m_historyPos>m_history.size()){
-        m_historyPos-=dir;
+    if(m_historyPos < 0 || m_historyPos > m_history.size()){
+        m_historyPos -= dir;
         return;
     }
 
     //if we're past m_history's last entry, insert "unsubmitted" text
     // -> it will be either empty or the last text the user entered
     //without pressing enter
-    if(m_historyPos==m_history.size()){
+    if(m_historyPos == m_history.size()){
         setText(m_unsubmittedText);
         return;
     }
     //if there is unsubmitted text in the line-edit, cache it
-    if(m_historyPos==m_history.size()-1 && dir<0)
-        m_unsubmittedText=text();
+    if(m_historyPos == m_history.size() - 1 && dir < 0)
+        m_unsubmittedText = text();
     setText(m_history[m_historyPos]);
 
     //I'd expect this to move the cursor to the end of the currently shown
     //text - yet it doesn't. Y u no work?
-    QTextCursor c=textCursor();
+    QTextCursor c = textCursor();
     c.movePosition(QTextCursor::End);
     setTextCursor(c);
 
@@ -230,38 +230,38 @@ void CodeInput::submit()
     //-----new chunk------
     //std::cout<<TXT;
     //
-    bool collectPreprocessor=false;
-    bool submitChunk=false;
+    bool collectPreprocessor = false;
+    bool submitChunk = false;
     QString chunk;
     foreach(QString line,text().split('\n')){
         if(line.startsWith('#')){
             if(!collectPreprocessor){
-                submitChunk=!chunk.isEmpty();
-                collectPreprocessor=true;
+                submitChunk = !chunk.isEmpty();
+                collectPreprocessor = true;
             }
         }else{
             if(collectPreprocessor){
-                submitChunk=true;
-                collectPreprocessor=false;
+                submitChunk = true;
+                collectPreprocessor = false;
             }
         }
         if(submitChunk){
             //chunk will have one trailing '\n' that the user did not enter - remove
-            chunk.remove(chunk.length()-1,1);
+            chunk.remove(chunk.length() - 1, 1);
             emit entered(chunk);
-            chunk=QString();
-            submitChunk=false;
+            chunk = QString();
+            submitChunk = false;
         }
         //QString::split removed '\n' - put it back
-        chunk+=line+'\n';
+        chunk += line + '\n';
     }
 
     //chunk will have one trailing '\n' that the user did not enter - remove
-    chunk.remove(chunk.length()-1,1);
+    chunk.remove(chunk.length() - 1, 1);
     emit entered(chunk);
     addToHistory(text());
     clear();
-    m_unsubmittedText=QString();
+    m_unsubmittedText = QString();
 }
 
 void CodeInput::enableMultiLineMode(bool e)

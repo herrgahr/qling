@@ -53,7 +53,7 @@ private:
     Qling* m_qling;
     CodeInput* m_codeInput;
     QTextEdit* m_codeOutput;
-
+    int m_inputStartPosition;
 };
 
 #endif // CODEWIDGET_H

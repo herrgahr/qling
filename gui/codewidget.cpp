@@ -23,31 +23,31 @@
 
 #include "codewidget.h"
 #include "codeinput.h"
-#include <QTextEdit>
+#include <QTextBrowser>
 #include <QVBoxLayout>
 #include <QScrollBar>
 #include <QCheckBox>
+#include <QTextEdit>
 
 #include "qling/qling.h"
+#include "qling/tests.h"
 
 CodeWidget::CodeWidget(Qling* qling)
     :QWidget()
     ,m_qling(qling)
 {
     setContentsMargins(0,0,0,0);
-    QVBoxLayout* layout=new QVBoxLayout(this);
+    QVBoxLayout* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0,0,0,0);
     layout->setSpacing(0);
-    m_codeOutput=new QTextEdit;
-    m_codeOutput->setReadOnly(true);
-    m_codeOutput->setFont(QFont("Monospace"));
+    m_codeOutput = new QTextEdit;
     layout->addWidget(m_codeOutput);
 
-    QHBoxLayout* hl=new QHBoxLayout;
-    QCheckBox* enableMultiLine=new QCheckBox("multi-line");
+    QHBoxLayout* hl = new QHBoxLayout;
+    QCheckBox* enableMultiLine = new QCheckBox("multi-line");
     hl->addWidget(enableMultiLine);
 
-    m_codeInput=new CodeInput;
+    m_codeInput = new CodeInput;
     hl->addWidget(m_codeInput);
     connect(enableMultiLine,SIGNAL(toggled(bool)),
             m_codeInput,SLOT(enableMultiLineMode(bool)));
@@ -73,21 +73,23 @@ void CodeWidget::processCode(const QString& str)
 
     //submit code
     //int indent = m_metaProcessor->process(str.toStdString().c_str());
+    m_inputStartPosition=m_codeOutput->textCursor().position();
+    cursor.insertText(str+QString("\n"));
     int indent=m_qling->processUserInput(str);
 
-    QTextCharFormat format=cursor.charFormat();
-    QString indentString;
+//    QTextCharFormat format=cursor.charFormat();
+//    QString indentString;
 
-    if(indent > 0){
-        //use yellow background to mark code that is part of incomplete input
-        format.setBackground(Qt::yellow);
-        for(int i=0;i<qMin(lastIndent,indent);++i)
-            indentString+=QString("  ");
-    }else if(lastIndent>0)
-        format.setBackground(palette().base());
-    lastIndent=indent;
+//    if(indent > 0){
+//        //use yellow background to mark code that is part of incomplete input
+//        format.setBackground(Qt::yellow);
+//        for(int i=0;i<qMin(lastIndent,indent);++i)
+//            indentString+=QString("  ");
+//    }else if(lastIndent>0)
+//        format.setBackground(palette().base());
+//    lastIndent=indent;
 
-    cursor.insertText(indentString+str+QString("\n"),format);
+//    cursor.insertText(indentString+str+QString("\n"),format);
     m_codeOutput->verticalScrollBar()->setValue(m_codeOutput->verticalScrollBar()->maximum());
 }
 

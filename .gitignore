@@ -1,7 +1,7 @@
 *.o
 moc_*
 ui_*
-*.user
+*.pro.user*
 log
 Makefile*
 bin/
