@@ -46,8 +46,7 @@ SOURCES +=\
     gui/codeinput.cpp \
     gui/codewidget.cpp \
     qling/jiteventlistener.cpp \
-    qling/qling.cpp \
-    gdb/gdb.cpp
+    qling/qling.cpp
 
 HEADERS  +=\
     gui/widget.h \
@@ -55,12 +54,7 @@ HEADERS  +=\
     gui/codeinput.h \
     gui/codewidget.h \
     qling/jiteventlistener.h \
-    qling/qling.h \
-    gdb/gdb.h
-
-OTHER_FILES += \
-    bin/gdb.py \
-    bin/prettyprinters.py
+    qling/qling.h
 
 
 
