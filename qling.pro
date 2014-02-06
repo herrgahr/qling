@@ -17,6 +17,13 @@ QMAKE_CXXFLAGS+=$$system($${LLVM_INSTALL}/bin/llvm-config --cxxflags)\
 -Wno-unused-parameter -Wno-strict-aliasing -std=c++11
 QMAKE_CXXFLAGS_RELEASE += -fno-omit-frame-pointer -g
 
+#QMAKE_LIBDIR_QT is set to /usr/lib (or alike) and needs to be unset. Otherwise
+#the linker command looks something like:
+#g++ -foo -bar -L/usr/lib -baz -L/your/llvm/install/path/configured/in/LLVM_INSTALL -lllvmLibFoo -lclangLibBar
+# which causes the llvm & clang libs in /usr/lib to be picked up before the ones in LLVM_INSTALL, i.e. the ones
+# used to build the cling libs. This leads to linker errors, of course.
+#...so unset here and manually add -L/usr/lib to LIBS later
+#I did not find a more elegant way to circumvent this problem - suggestions welcome :)
 message($$QMAKE_LIBDIR_QT)
 QMAKE_LIBDIR_QT=""
 
