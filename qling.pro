@@ -38,6 +38,10 @@ $$PWD/qt-hack/qatomic_sun.o\
 -lclingInterpreter\
 -lclingUtils
 
+#taken from llvm/tools/cling/tools/driver/Makefile, variable USEDLIBS:
+#clangFrontend.a clangSerialization.a clangDriver.a clangCodeGen.a clangParse.a clangSema.a clangEdit.a clangAnalysis.a clangAST.a clangLex.a clangBasic.a
+#the following LIBS+=... directive should reflect the libs stated there.
+
 LIBS+=\
 -lclangFrontend \
 -lclangSerialization \
@@ -57,8 +61,6 @@ LIBS+=$$system($${LLVM_INSTALL}/bin/llvm-config --libs)
 LIBS += -lncurses
 
 LIBS += -L/usr/lib
-
-#clangFrontend.a clangSerialization.a clangDriver.a clangCodeGen.a clangParse.a clangSema.a clangEdit.a clangAnalysis.a clangAST.a clangLex.a clangBasic.a
 
  #for JitEventListener
 
