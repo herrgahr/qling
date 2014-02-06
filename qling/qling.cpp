@@ -42,7 +42,7 @@
 #include "clang/Basic/LangOptions.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInstance.h"
-#include "clang/Frontend/HeaderSearchOptions.h"
+#include "clang/Lex/HeaderSearchOptions.h"
 #include "clang/Frontend/ASTUnit.h"
 
 #include "cling/Interpreter/ValuePrinter.h"
@@ -76,10 +76,10 @@ void cpuid(int (&abcd)[4], int func, int id) {
 //force linking to these functions
 void neverCalled(){
     cling::ValuePrinterInfo VPI(0, 0);
-    cling::printValuePublicDefault(llvm::outs(), 0, VPI);
+    //cling::printValuePublicDefault(llvm::outs(), 0, VPI);
     //cling::printValuePublic(llvm::outs(), 0, )
     cling_PrintValue(0, 0, 0);
-    cling::flushOStream(llvm::outs());
+    //cling::flushOStream(llvm::outs());
 }
 
 void Qling::init(const char* llvm_install)
@@ -204,17 +204,18 @@ void Qling::exportToInterpreter(const QObject& obj,const QString& name)
 int Qling::process(const QString &expr)
 {
     emit aboutToProcess();
+    cling::Interpreter::CompilationResult compilationResult;
     if(m_timing){
         QElapsedTimer timer;
         timer.start();
-        int ret = m_metaProcessor->process(qPrintable(expr));
+        int ret = m_metaProcessor->process(qPrintable(expr), compilationResult, nullptr);
         std::cout<<"Elapsed time: "<<timer.elapsed()<<std::endl;
         return ret;
     }
     //unfortunately, MetaProcessor::process does not indicate if there was an
     //error - it only returns "expected indentation", i.e. >0 if the input
     //was incomplete
-    int indent = m_metaProcessor->process(qPrintable(expr));
+    int indent = m_metaProcessor->process(qPrintable(expr), compilationResult, nullptr);
     //dumbed-down version: just look for the string. If it's a false positive
     //(for whatever reason) then moc will just fail and nothing is lost
     if(!indent && expr.contains("Q_OBJECT"))

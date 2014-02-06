@@ -1,6 +1,6 @@
 #include "jiteventlistener.h"
 #include <iostream>
-#include "llvm/Function.h"
+#include "llvm/IR/Function.h"
 #include "llvm/Support/raw_ostream.h"
 
 void JitEventListener::NotifyFunctionEmitted(const llvm::Function &f, void *, size_t, const llvm::JITEventListener::EmittedFunctionDetails &)

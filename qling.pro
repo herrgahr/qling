@@ -17,25 +17,43 @@ QMAKE_CXXFLAGS+=$$system($${LLVM_INSTALL}/bin/llvm-config --cxxflags)\
 -Wno-unused-parameter -Wno-strict-aliasing -std=c++11
 QMAKE_CXXFLAGS_RELEASE += -fno-omit-frame-pointer -g
 
+message($$QMAKE_LIBDIR_QT)
+QMAKE_LIBDIR_QT=""
+
 # rdynamic causes symbols to be exported even though this is not a lib
 LIBS += -lm -ldl -fPIC -rdynamic
 
 LIBS+=$$system($${LLVM_INSTALL}/bin/llvm-config --ldflags)
 
 LIBS +=\
-qt-hack/qatomic_sun.o\
+$$PWD/qt-hack/qatomic_sun.o\
 -lclingMetaProcessor\
 -lclingInterpreter\
 -lclingUtils
 
 LIBS+=\
--lclangFrontend -lclangSerialization -lclangDriver -lclangCodeGen\
--lclangParse -lclangSema -lclangAnalysis \
--lclangAST -lclangLex -lclangBasic\
--lclangEdit
+-lclangFrontend \
+-lclangSerialization \
+-lclangDriver \
+-lclangCodeGen \
+-lclangParse \
+-lclangSema \
+-lclangEdit \
+-lclangAnalysis \
+-lclangAST \
+-lclangLex \
+-lclangBasic
+
+LIBS+=$$system($${LLVM_INSTALL}/bin/llvm-config --libs)
+
+
+LIBS += -lncurses
+
+LIBS += -L/usr/lib
+
+#clangFrontend.a clangSerialization.a clangDriver.a clangCodeGen.a clangParse.a clangSema.a clangEdit.a clangAnalysis.a clangAST.a clangLex.a clangBasic.a
 
  #for JitEventListener
-LIBS+=$$system($${LLVM_INSTALL}/bin/llvm-config --libs)
 
 LIBS+=-ldl
 

@@ -61,7 +61,6 @@ protected:
 
 private:
     CodeWidget* m_codeWidget;
-    QDockWidget* m_gdbDock;
     Qling* m_interpreter;
     ConsoleOutput* m_console;
 };
